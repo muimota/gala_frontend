@@ -1,0 +1,21 @@
+{
+  "name": "galaweb",
+  "description": "concerts visualization",
+  "main": "dist/index.html",
+  "authors": [
+    "martin@muimota.net"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "three.js": "threejs#*"
+  }
+}
