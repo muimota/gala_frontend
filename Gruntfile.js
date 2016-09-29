@@ -34,7 +34,7 @@ module.exports = function(grunt) {
             {src: '*', dest: 'dist/data/', expand: true, cwd: 'src/data'},
             {src: '*', dest: 'dist/img/', expand: true, cwd: 'src/img'},
             {src: '*.html', dest: 'dist/', expand: true, cwd: 'src/'},
-            {src: ['three.js/build/three.min.js','papaparse/papaparse.min.js'], dest: 'dist/libs/', expand: true, cwd: 'bower_components'},
+            {src: ['jquery/dist/jquery.min.js','three.js/build/three.min.js','papaparse/papaparse.min.js'], dest: 'dist/libs/', expand: true, cwd: 'bower_components'},
           ],
         },
       },
