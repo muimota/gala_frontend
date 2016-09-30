@@ -1,5 +1,6 @@
 //martin nadal
 var renderer, scene, camera, stats;
+var locations;
 var pointCloud;
 var layerCloud;
 var raycaster;
@@ -57,40 +58,28 @@ function init() {
 	clock = new THREE.Clock();
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
   camera.up = new THREE.Vector3(0,0,1);
-  //camera.position.set(0,0,0)
-  //camera.lookAt(new THREE.Vector3(100,100,100));
-
   camera.position.set(200,0,0)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
+  //load locations
   console.log('loading');
-  $.getJSON( "http://localhost/gala/locations", function( locations ) {
+  $.getJSON( "http://localhost/gala/locations", function( data ) {
     console.log('loaded!');
-
+    locations = data;
     pointCloud = generatePointcloud(50,locations,0.5,new THREE.Color(255,255,255,0.4))
   	pointCloud.position.set( 0,0,0 );
   	scene.add( pointCloud );
-
-    $.getJSON( "http://localhost/gala/concerts/band/Paco%20de%20Lucia", function( concerts ) {
-      console.log('loaded!');
-
-      var points = []
-
-      for(var date in concerts){
-        points.push(locations[concerts[date][1]])
-      }
-      layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'));
-    	layerCloud.position.set( 0,0,0 );
-    	scene.add( layerCloud );
-      animate();
-    }).fail(function() {
-      console.log( "error" );
-    });
+    //showArtistConcerts("Iron Maiden")
+    animate();
   }).fail(function() {
     console.log( "error" );
   });
 
-
+  //GUI
+  $('.band').click(function(e){
+    var artistName = $(e.target).text();
+    showArtistConcerts(artistName)
+  })
 	//
 	renderer = new THREE.WebGLRenderer();
 	renderer.setPixelRatio( window.devicePixelRatio );
@@ -102,6 +91,24 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+}
+
+function showArtistConcerts(artistName){
+
+  $.getJSON( "http://localhost/gala/concerts/band/"+artistName, function( concerts ) {
+
+    if(layerCloud != undefined){
+      pointCloud.remove(layerCloud);
+    }
+
+    var points = []
+    for(var date in concerts){
+      points.push(locations[concerts[date][1]])
+    }
+    layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'));
+    layerCloud.position.set( 0,0,0 );
+    pointCloud.add( layerCloud );
+  });
 }
 
 function onDocumentMouseMove( event ) {
@@ -119,10 +126,7 @@ function animate() {
 	render();
 }
 function render() {
-	pointCloud.applyMatrix( rotateY );
-  if(layerCloud!=undefined){
-    layerCloud.applyMatrix( rotateY )
-  }
+	pointCloud.rotation.z += .0005;
 	camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
 	renderer.render( scene, camera );
