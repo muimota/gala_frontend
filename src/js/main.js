@@ -1,6 +1,7 @@
 //martin nadal
 var renderer, scene, camera, stats;
 var pointCloud;
+var layerCloud;
 var raycaster;
 var mouse = new THREE.Vector2();
 var intersection = null;
@@ -23,8 +24,8 @@ function generateWorld(radius,points){
   	var colors = new Float32Array( numPoints*3 )
     for(var i=0;i<numPoints;i++){
 
-      var lng = points[i]['lat'] * Math.PI / 180.0
-      var lat = points[i]['lng'] * Math.PI / 180.0
+      var lat = points[i][0] * Math.PI / 180.0
+      var lng = points[i][1] * Math.PI / 180.0
 
       var x = Math.cos(lng)*radius*Math.cos(lat)
       var y = Math.sin(lng)*radius*Math.cos(lat)
@@ -40,9 +41,12 @@ function generateWorld(radius,points){
   	return geometry;
 }
 
-function generatePointcloud(radius,points) {
+function generatePointcloud(radius,points,size,color) {
 	var geometry = generateWorld(radius,points)
-	var material = new THREE.PointsMaterial({size:0.5});
+	var material = new THREE.PointsMaterial({color:color,size:size});
+  material.transparent = true;
+  material.depthTest = false;
+
 	var pointcloud = new THREE.Points( geometry, material );
 	return pointcloud;
 }
@@ -53,20 +57,39 @@ function init() {
 	clock = new THREE.Clock();
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
   camera.up = new THREE.Vector3(0,0,1);
-  camera.position.set(0,200,0)
+  //camera.position.set(0,0,0)
+  //camera.lookAt(new THREE.Vector3(100,100,100));
+
+  camera.position.set(200,0,0)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
   console.log('loading');
-  $.getJSON( "data/locations.json", function( data ) {
+  $.getJSON( "http://localhost/gala/locations", function( locations ) {
     console.log('loaded!');
 
-    pointCloud = generatePointcloud(50,data);
+    pointCloud = generatePointcloud(50,locations,0.5,new THREE.Color(255,255,255,0.4))
   	pointCloud.position.set( 0,0,0 );
   	scene.add( pointCloud );
-    animate();
+
+    $.getJSON( "http://localhost/gala/concerts/band/Paco%20de%20Lucia", function( concerts ) {
+      console.log('loaded!');
+
+      var points = []
+
+      for(var date in concerts){
+        points.push(locations[concerts[date][1]])
+      }
+      layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'));
+    	layerCloud.position.set( 0,0,0 );
+    	scene.add( layerCloud );
+      animate();
+    }).fail(function() {
+      console.log( "error" );
+    });
   }).fail(function() {
     console.log( "error" );
   });
+
 
 	//
 	renderer = new THREE.WebGLRenderer();
@@ -76,13 +99,11 @@ function init() {
 	//
 	raycaster = new THREE.Raycaster();
 	raycaster.params.Points.threshold = threshold;
-	//
-	//stats = new Stats();
-	//container.appendChild( stats.dom );
-	//
+
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 }
+
 function onDocumentMouseMove( event ) {
 	event.preventDefault();
 	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
@@ -99,6 +120,9 @@ function animate() {
 }
 function render() {
 	pointCloud.applyMatrix( rotateY );
+  if(layerCloud!=undefined){
+    layerCloud.applyMatrix( rotateY )
+  }
 	camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
 	renderer.render( scene, camera );
