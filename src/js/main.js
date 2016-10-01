@@ -1,24 +1,19 @@
 //martin nadal
 var renderer, scene, camera, stats;
-var locations;
-var pointCloud;
-var layerCloud;
+var locations;     //id:[lat,lng]
+var events;        //events {date:[eventId,locationId]}
+var pointCloud;    // all locations
+var layerCloud;    // highlighted locations
+var layerCloudLocations;// [locationIndex ..] tabla de la geometrya de layer
 var raycaster;
 var mouse = new THREE.Vector2();
-var intersection = null;
-var spheres = [];
-var spheresIndex = 0;
 var clock;
-var threshold = 0.1;
-var pointSize = 0.05;
-var width = 150;
-var length = 150;
-var rotateY = new THREE.Matrix4().makeRotationZ( 0.005 );
+var indicator;
 
 init();
 
-
 function generateWorld(radius,points){
+
   	var geometry = new THREE.BufferGeometry();
     var numPoints = points.length;
     var positions = new Float32Array( numPoints*3 )
@@ -38,12 +33,12 @@ function generateWorld(radius,points){
 
     }
     geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
-    geometry.computeBoundingBox();
   	return geometry;
 }
 
 function generatePointcloud(radius,points,size,color) {
 	var geometry = generateWorld(radius,points)
+
 	var material = new THREE.PointsMaterial({color:color,size:size});
   material.transparent = true;
   material.depthTest = false;
@@ -58,7 +53,7 @@ function init() {
 	clock = new THREE.Clock();
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
   camera.up = new THREE.Vector3(0,0,1);
-  camera.position.set(200,0,0)
+  camera.position.set(200,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
   //load locations
@@ -69,7 +64,7 @@ function init() {
     pointCloud = generatePointcloud(50,locations,0.5,new THREE.Color(255,255,255,0.4))
   	pointCloud.position.set( 0,0,0 );
   	scene.add( pointCloud );
-    //showArtistConcerts("Iron Maiden")
+    pointCloud.add(indicator);
     animate();
   }).fail(function() {
     console.log( "error" );
@@ -80,14 +75,20 @@ function init() {
     var artistName = $(e.target).text();
     showArtistConcerts(artistName)
   })
-	//
+	//indicator
+  var geometry = new THREE.SphereBufferGeometry( 5, 20, 20 );
+  var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+  indicator = new THREE.Mesh( geometry, material )
+  indicator.visible = false
+
+
 	renderer = new THREE.WebGLRenderer();
 	renderer.setPixelRatio( window.devicePixelRatio );
 	renderer.setSize( window.innerWidth, window.innerHeight );
 	container.appendChild( renderer.domElement );
 	//
 	raycaster = new THREE.Raycaster();
-	raycaster.params.Points.threshold = threshold;
+	raycaster.params.Points.threshold = 5.0;
 
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -99,11 +100,15 @@ function showArtistConcerts(artistName){
 
     if(layerCloud != undefined){
       pointCloud.remove(layerCloud);
+      layerCloud.geometry.dispose();
     }
 
+    layerCloudLocations = []
     var points = []
     for(var date in concerts){
-      points.push(locations[concerts[date][1]])
+      var locationIndex = concerts[date][1];
+      layerCloudLocations.push(locationIndex)
+      points.push(locations[locationIndex])
     }
     layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'));
     layerCloud.position.set( 0,0,0 );
@@ -113,7 +118,7 @@ function showArtistConcerts(artistName){
 
 function onDocumentMouseMove( event ) {
 	event.preventDefault();
-	mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+	mouse.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
 function onWindowResize() {
@@ -126,6 +131,28 @@ function animate() {
 	render();
 }
 function render() {
+
+
+  if(layerCloud != undefined){
+
+    var intersection = raycaster.intersectObject( layerCloud );
+
+    if(intersection.length>0){
+
+      var index = intersection[0].index
+      var locationIndex = layerCloudLocations[index];
+      var pointArray    = layerCloud.geometry.getAttribute( 'position' ).array;
+      indicator.position.set(pointArray[index*3],pointArray[index*3+1],pointArray[index*3+2])
+      indicator.visible = true;
+
+    }else{
+
+      indicator.visible = false;
+
+    }
+
+  }
+
 	pointCloud.rotation.z += .0005;
 	camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
