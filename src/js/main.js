@@ -5,11 +5,13 @@ var events;        //events {date:[eventId,locationId]}
 var pointCloud;    // all locations
 var layerCloud;    // highlighted locations
 var layerCloudLocations;// [locationIndex ..] tabla de la geometrya de layer
+var currentDate;
 var raycaster;
 var mouse = new THREE.Vector2();
 var clock;
 var indicator;
 
+var eventModel;
 init();
 
 function generateWorld(radius,points){
@@ -66,14 +68,34 @@ function init() {
   	scene.add( pointCloud );
     pointCloud.add(indicator);
     animate();
+
   }).fail(function() {
     console.log( "error" );
   });
 
+  eventModel = new EventsModel();
+  eventModel.load("http://localhost/gala/timeline",
+    function(){
+      displayConcertsLocationsinDate('20140202')
+    }
+  );
   //GUI
   $('.band').click(function(e){
     var artistName = $(e.target).text();
     showArtistConcerts(artistName)
+  })
+
+  $('#prevDate').click(function(){
+    var currentDateIndex = Math.max(0,eventModel.timeline.indexOf(currentDate)-1);
+    var date = eventModel.timeline[currentDateIndex]
+    displayConcertsLocationsinDate(date);
+  })
+
+  $('#nextDate').click(function(){
+    var currentDateIndex = Math.min(eventModel.timeline.length,
+      eventModel.timeline.indexOf(currentDate)+1);
+    var date = eventModel.timeline[currentDateIndex]
+    displayConcertsLocationsinDate(date);
   })
 	//indicator
   var geometry = new THREE.SphereBufferGeometry( 5, 20, 20 );
@@ -98,22 +120,39 @@ function showArtistConcerts(artistName){
 
   $.getJSON( "http://localhost/gala/concerts/band/"+artistName, function( concerts ) {
 
-    if(layerCloud != undefined){
-      pointCloud.remove(layerCloud);
-      layerCloud.geometry.dispose();
-    }
 
-    layerCloudLocations = []
-    var points = []
+    var concertLocations = []
     for(var date in concerts){
-      var locationIndex = concerts[date][1];
-      layerCloudLocations.push(locationIndex)
-      points.push(locations[locationIndex])
+      var locationId = concerts[date][1];
+      concertLocations.push(locationId)
     }
-    layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'));
-    layerCloud.position.set( 0,0,0 );
-    pointCloud.add( layerCloud );
+    displayLocations(concertLocations);
   });
+}
+//updates points in map
+function displayLocations(locationsIds){
+  if(layerCloud != undefined){
+    pointCloud.remove(layerCloud);
+    layerCloud.geometry.dispose();
+  }
+  //array stored globally that is going to be used to select locations
+  layerCloudLocations = locationsIds
+  var points = []
+  for(var i=0;i<locationsIds.length;i++){
+    var locationId = locationsIds[i];
+    points.push(locations[locationId])
+  }
+  layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'));
+  layerCloud.position.set( 0,0,0 );
+  pointCloud.add( layerCloud );
+}
+
+function displayConcertsLocationsinDate(date){
+  var concertLocationIds = eventModel.getConcerts(date);
+  currentDate = date;
+  $('#concertDate').text(date);
+
+  displayLocations(concertLocationIds);
 }
 
 function onDocumentMouseMove( event ) {
