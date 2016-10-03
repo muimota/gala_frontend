@@ -10,6 +10,7 @@ var raycaster;
 var mouse = new THREE.Vector2();
 var clock;
 var indicator;
+var controls;
 
 var eventModel;
 init();
@@ -41,8 +42,13 @@ function generateWorld(radius,points){
 function generatePointcloud(radius,points,size,color) {
 	var geometry = generateWorld(radius,points)
 
-	var material = new THREE.PointsMaterial({color:color,size:size});
-  material.transparent = true;
+	//var material = new THREE.PointsMaterial({color:color,size:size});
+  var material = new THREE.PointsMaterial({
+     color: color,
+     size: size
+   });
+
+//  material.transparent = true;
   material.depthTest = false;
 
 	var pointcloud = new THREE.Points( geometry, material );
@@ -85,6 +91,15 @@ function init() {
     showArtistConcerts(artistName)
   })
 
+  controls = new THREE.OrbitControls( camera );
+  controls.enableDamping = true;
+	controls.dampingFactor = 0.25;
+  controls.enableZoom    = true;
+  this.enableKeys        = false;
+  this.enablePan         = false;
+  this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
+
+
   $('#prevDate').click(function(){
     var currentDateIndex = Math.max(0,eventModel.timeline.indexOf(currentDate)-1);
     var date = eventModel.timeline[currentDateIndex]
@@ -98,7 +113,7 @@ function init() {
     displayConcertsLocationsinDate(date);
   })
 	//indicator
-  var geometry = new THREE.SphereBufferGeometry( 5, 20, 20 );
+  var geometry = new THREE.SphereBufferGeometry( 2.5, 10, 10 );
   var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
   indicator = new THREE.Mesh( geometry, material )
   indicator.visible = false
@@ -130,7 +145,7 @@ function showArtistConcerts(artistName){
   });
 }
 //updates points in map
-function displayLocations(locationsIds){
+function displayLocations(locationsIds,color,size){
   if(layerCloud != undefined){
     pointCloud.remove(layerCloud);
     layerCloud.geometry.dispose();
@@ -192,7 +207,7 @@ function render() {
 
   }
 
-	pointCloud.rotation.z += .0005;
+	//pointCloud.rotation.z += .0005;
 	camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
 	renderer.render( scene, camera );
