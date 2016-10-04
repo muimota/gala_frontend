@@ -163,6 +163,7 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+  //document.addEventListener( 'mouseclick', onDocumentMouseClick, false );
 }
 
 function showArtistConcerts(artistName){
@@ -175,7 +176,7 @@ function showArtistConcerts(artistName){
       var locationId = concerts[date][1];
       concertLocations.push(locationId)
     }
-    displayLocations(concertLocations);
+    displayLocations(concertLocations,new THREE.Color('red'),10);
   });
 }
 //updates locations in map
@@ -191,7 +192,7 @@ function displayLocations(locationsIds,color,size){
     var locationId = locationsIds[i];
     points.push(locations[locationId])
   }
-  layerCloud = generatePointcloud(50,points,size,color,1.0);
+  layerCloud = generatePointcloud(50,points,size,color,0.8);
   layerCloud.position.set( 0,0,0 );
   pointCloud.add( layerCloud );
 }
@@ -199,19 +200,55 @@ function displayConcertsinDate(date){
   eventModel.getConcerts(date,function(concerts){
 
     var locationIds = []
-    var colors       = []
-    var sizes        = []
+    var colors      = []
+    var sizes       = []
+
+    var pallete     = {'electronic': new THREE.Color(0x437BC4),
+                       'pop'       : new THREE.Color(0xA727C3),
+                       'folk'      : new THREE.Color(0xF0E44B),
+                       'rock'      : new THREE.Color(0xCF3D58),
+                       'jazz'      : new THREE.Color(0xE68E3E),
+                       'hip hop'   : new THREE.Color(0x6AC75C)
+                     }
+    var activegenres = ['pop','folk']
 
     for(var locationId in concerts){
-        locationIds.push(locationId)
-        var size = concerts[locationId]['total']
+        var concert = concerts[locationId];
+        var size = Math.min(100,concert['total'])
+        var color = new THREE.Color('black');
+
+        //normalization
+        var tagged =  0;
+        for(var i=0;i<activegenres.length;i++){
+          var musicStyle = activegenres[i]
+          if(musicStyle in concert){
+              tagged += concert[musicStyle]
+          }
+        }
+        if(tagged == 0 ){
+            //color.set('white')
+            continue;
+        }else{
+          for(var i=0;i<activegenres.length;i++){
+            var musicStyle = activegenres[i]
+
+            if(musicStyle in concert){
+              var styleColor = pallete[musicStyle];
+              var styleRatio = concert[musicStyle]/tagged;
+              color.add(styleColor.clone().multiplyScalar(styleRatio));
+            }
+          }
+        }
+        colors.push(color)
         sizes.push(size)
+        locationIds.push(locationId)
+
     }
 
     currentDate = date;
     $('#concertDate').text(date);
 
-    displayLocations(locationIds,new THREE.Color(0xFF00FF),sizes)
+    displayLocations(locationIds,colors,sizes)
   });
 }
 
