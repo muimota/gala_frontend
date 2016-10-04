@@ -39,22 +39,51 @@ function generateWorld(radius,points){
   	return geometry;
 }
 
+
 function generatePointcloud(radius,points,size,color,opacity) {
-	var geometry = generateWorld(radius,points)
 
-	//var material = new THREE.PointsMaterial({color:color,size:size});
-  var material = new THREE.PointsMaterial({
-    map: THREE.ImageUtils.loadTexture( '../img/particleTexture.png' ),
-    color: color,
-    size: size,
-    opacity: opacity,
-    //blending: THREE.AdditiveBlending,
-    depthTest: false,
-    transparent: true
-   });
+  var geometry = generateWorld(radius,points)
+
+  var colors = new Float32Array( points.length*3 )
+  var sizes  = new Float32Array( points.length   )
+
+  //size
+  if (!(size instanceof Array) ){
+    size = [size]
+  }
+  for(var i=0;i<sizes.length;i++){
+    sizes[i] = size[i%size.length]
+  }
+
+  //color
+  if (!(color instanceof Array) ){
+    color = [color]
+  }
+  for(var i=0;i<colors.length/3;i++){
+    colors[i*3  ] = color[i%color.length].r
+    colors[i*3+1] = color[i%color.length].g
+    colors[i*3+2] = color[i%color.length].b
+  }
+
+  uniforms = {
+   color:     { value: new THREE.Color( 0xffffff ) },
+   opacity:   { value: opacity},
+   texture:   { value: THREE.ImageUtils.loadTexture( '../img/particleTexture.png' )}
+	};
+
+	var shaderMaterial = new THREE.ShaderMaterial( {
+  	uniforms:       uniforms,
+  	vertexShader:   document.getElementById( 'vertexshader' ).textContent,
+  	fragmentShader: document.getElementById( 'fragmentshader' ).textContent,
+  	depthTest:      false,
+  	transparent:    true
+  });
 
 
-	var pointcloud = new THREE.Points( geometry, material );
+	geometry.addAttribute( 'customColor', new THREE.BufferAttribute( colors, 3 ) );
+	geometry.addAttribute( 'size', new THREE.BufferAttribute( sizes, 1 ) );
+
+	var pointcloud = new THREE.Points( geometry, shaderMaterial );
 	return pointcloud;
 }
 
@@ -73,7 +102,7 @@ function init() {
   $.getJSON( "http://localhost/gala/locations", function( data ) {
     console.log('loaded!');
     locations = data;
-    pointCloud = generatePointcloud(50,locations,0.5,new THREE.Color(255,255,255),0.25)
+    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
   	pointCloud.position.set( 0,0,0 );
   	scene.add( pointCloud );
     pointCloud.add(indicator);
