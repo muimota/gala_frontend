@@ -39,17 +39,20 @@ function generateWorld(radius,points){
   	return geometry;
 }
 
-function generatePointcloud(radius,points,size,color) {
+function generatePointcloud(radius,points,size,color,opacity) {
 	var geometry = generateWorld(radius,points)
 
 	//var material = new THREE.PointsMaterial({color:color,size:size});
   var material = new THREE.PointsMaterial({
-     color: color,
-     size: size
+    map: THREE.ImageUtils.loadTexture( '../img/particleTexture.png' ),
+    color: color,
+    size: size,
+    opacity: opacity,
+    //blending: THREE.AdditiveBlending,
+    depthTest: false,
+    transparent: true
    });
 
-//  material.transparent = true;
-  material.depthTest = false;
 
 	var pointcloud = new THREE.Points( geometry, material );
 	return pointcloud;
@@ -58,6 +61,7 @@ function generatePointcloud(radius,points,size,color) {
 function init() {
 	var container = document.getElementById( 'container' );
 	scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0x1E2E37 );
 	clock = new THREE.Clock();
 	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
   camera.up = new THREE.Vector3(0,0,1);
@@ -69,7 +73,7 @@ function init() {
   $.getJSON( "http://localhost/gala/locations", function( data ) {
     console.log('loaded!');
     locations = data;
-    pointCloud = generatePointcloud(50,locations,0.5,new THREE.Color(255,255,255,0.4))
+    pointCloud = generatePointcloud(50,locations,0.5,new THREE.Color(255,255,255),0.25)
   	pointCloud.position.set( 0,0,0 );
   	scene.add( pointCloud );
     pointCloud.add(indicator);
@@ -95,6 +99,7 @@ function init() {
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
   controls.enableZoom    = true;
+
   this.enableKeys        = false;
   this.enablePan         = false;
   this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
@@ -113,7 +118,7 @@ function init() {
     displayConcertsLocationsinDate(date);
   })
 	//indicator
-  var geometry = new THREE.SphereBufferGeometry( 2.5, 10, 10 );
+  var geometry = new THREE.SphereBufferGeometry( 1.5, 10, 10 );
   var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
   indicator = new THREE.Mesh( geometry, material )
   indicator.visible = false
@@ -125,7 +130,7 @@ function init() {
 	container.appendChild( renderer.domElement );
 	//
 	raycaster = new THREE.Raycaster();
-	raycaster.params.Points.threshold = 5.0;
+	raycaster.params.Points.threshold = 2.0;
 
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
@@ -157,7 +162,7 @@ function displayLocations(locationsIds,color,size){
     var locationId = locationsIds[i];
     points.push(locations[locationId])
   }
-  layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'));
+  layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'),1.0);
   layerCloud.position.set( 0,0,0 );
   pointCloud.add( layerCloud );
 }
@@ -193,7 +198,18 @@ function render() {
 
     if(intersection.length>0){
 
-      var index = intersection[0].index
+      var index = 0;
+      var minDistance = 9999999;
+
+      for(i=0;i < intersection.length; i ++){
+        var distanceToRay = intersection[i].distanceToRay;
+        if(distanceToRay<minDistance){
+            index = intersection[i].index;
+            minDistance = distanceToRay;
+        }
+      }
+
+
       var locationIndex = layerCloudLocations[index];
       var pointArray    = layerCloud.geometry.getAttribute( 'position' ).array;
       indicator.position.set(pointArray[index*3],pointArray[index*3+1],pointArray[index*3+2])
@@ -206,7 +222,7 @@ function render() {
     }
 
   }
-
+  controls.update();
 	//pointCloud.rotation.z += .0005;
 	camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
