@@ -115,7 +115,7 @@ function init() {
   eventModel = new EventsModel();
   eventModel.load("http://localhost/gala/timeline",
     function(){
-      displayConcertsLocationsinDate('20140202')
+      displayConcertsinDate('20140202')
     }
   );
   //GUI
@@ -137,14 +137,14 @@ function init() {
   $('#prevDate').click(function(){
     var currentDateIndex = Math.max(0,eventModel.timeline.indexOf(currentDate)-1);
     var date = eventModel.timeline[currentDateIndex]
-    displayConcertsLocationsinDate(date);
+    displayConcertsinDate(date);
   })
 
   $('#nextDate').click(function(){
     var currentDateIndex = Math.min(eventModel.timeline.length,
       eventModel.timeline.indexOf(currentDate)+1);
     var date = eventModel.timeline[currentDateIndex]
-    displayConcertsLocationsinDate(date);
+    displayConcertsinDate(date);
   })
 	//indicator
   var geometry = new THREE.SphereBufferGeometry( 1.5, 10, 10 );
@@ -178,7 +178,7 @@ function showArtistConcerts(artistName){
     displayLocations(concertLocations);
   });
 }
-//updates points in map
+//updates locations in map
 function displayLocations(locationsIds,color,size){
   if(layerCloud != undefined){
     pointCloud.remove(layerCloud);
@@ -191,17 +191,36 @@ function displayLocations(locationsIds,color,size){
     var locationId = locationsIds[i];
     points.push(locations[locationId])
   }
-  layerCloud = generatePointcloud(50,points,2.5,new THREE.Color('#ff0000'),1.0);
+  layerCloud = generatePointcloud(50,points,size,color,1.0);
   layerCloud.position.set( 0,0,0 );
   pointCloud.add( layerCloud );
 }
+function displayConcertsinDate(date){
+  eventModel.getConcerts(date,function(concerts){
+
+    var locationIds = []
+    var colors       = []
+    var sizes        = []
+
+    for(var locationId in concerts){
+        locationIds.push(locationId)
+        var size = concerts[locationId]['total']
+        sizes.push(size)
+    }
+
+    currentDate = date;
+    $('#concertDate').text(date);
+
+    displayLocations(locationIds,new THREE.Color(0xFF00FF),sizes)
+  });
+}
 
 function displayConcertsLocationsinDate(date){
-  var concertLocationIds = eventModel.getConcerts(date);
+  var concertLocationIds = eventModel.getLocations(date);
   currentDate = date;
   $('#concertDate').text(date);
 
-  displayLocations(concertLocationIds);
+  displayLocations(concertLocationIds,new THREE.Color('#F00F22'),10.0)
 }
 
 function onDocumentMouseMove( event ) {
