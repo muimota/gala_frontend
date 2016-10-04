@@ -182,9 +182,17 @@ function showArtistConcerts(artistName){
 //updates locations in map
 function displayLocations(locationsIds,color,size){
   if(layerCloud != undefined){
-    pointCloud.remove(layerCloud);
-    layerCloud.geometry.dispose();
+    var prevLayerCloud = layerCloud;
+    new TWEEN.Tween( prevLayerCloud.material.uniforms.opacity )
+    .to( { value: 0 }, 600 )
+    .onComplete(function(){
+      prevLayerCloud.geometry.dispose()
+      prevLayerCloud.material.dispose()
+
+    })
+    .start();
   }
+
   //array stored globally that is going to be used to select locations
   layerCloudLocations = locationsIds
   var points = []
@@ -192,9 +200,12 @@ function displayLocations(locationsIds,color,size){
     var locationId = locationsIds[i];
     points.push(locations[locationId])
   }
-  layerCloud = generatePointcloud(50,points,size,color,0.8);
+  layerCloud = generatePointcloud(50,points,size,color,0.0);
   layerCloud.position.set( 0,0,0 );
   pointCloud.add( layerCloud );
+
+  new TWEEN.Tween( layerCloud.material.uniforms.opacity ).to( { value: 0.8 }, 600 ).start();
+
 }
 function displayConcertsinDate(date){
   eventModel.getConcerts(date,function(concerts){
@@ -210,7 +221,7 @@ function displayConcertsinDate(date){
                        'jazz'      : new THREE.Color(0xE68E3E),
                        'hip hop'   : new THREE.Color(0x6AC75C)
                      }
-    var activegenres = ['pop','folk']
+    var activegenres = ['rock','jazz']
 
     for(var locationId in concerts){
         var concert = concerts[locationId];
@@ -276,6 +287,7 @@ function animate() {
 }
 function render() {
 
+  TWEEN.update();
 
   if(layerCloud != undefined){
 
@@ -294,16 +306,12 @@ function render() {
         }
       }
 
-
       var locationIndex = layerCloudLocations[index];
       var pointArray    = layerCloud.geometry.getAttribute( 'position' ).array;
       indicator.position.set(pointArray[index*3],pointArray[index*3+1],pointArray[index*3+2])
       indicator.visible = true;
-
     }else{
-
       indicator.visible = false;
-
     }
 
   }
