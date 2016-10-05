@@ -11,9 +11,154 @@ var mouse = new THREE.Vector2();
 var clock;
 var indicator;
 var controls;
-
+var palette,activegenres;
+var config
+var updateInterval;
 var eventModel;
 init();
+
+
+
+function init() {
+
+
+	var container = document.getElementById( 'container' );
+	scene = new THREE.Scene();
+  scene.background = new THREE.Color( 0x1E2E37 );
+	clock = new THREE.Clock();
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setPixelRatio( window.devicePixelRatio );
+  renderer.setSize( window.innerWidth, window.innerHeight );
+  container.appendChild( renderer.domElement );
+
+  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+  camera.up = new THREE.Vector3(0,0,1);
+  camera.position.set(200,0,100)
+  camera.lookAt(new THREE.Vector3(0,0,0));
+
+  //load locations
+  console.log('loading');
+  $.getJSON( "http://localhost/gala/locations", function( data ) {
+    console.log('loaded!');
+    locations = data;
+    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
+  	pointCloud.position.set( 0,0,0 );
+  	scene.add( pointCloud );
+    pointCloud.add(indicator);
+    animate();
+
+  }).fail(function() {
+    console.log( "error" );
+  });
+
+  eventModel = new EventsModel();
+  eventModel.load("http://localhost/gala/timeline",
+    function(){
+      displayConcertsinDate('20140202')
+    }
+  );
+  //GUI
+  config = {
+    speed:5,
+    year:2006,
+    autorotate:true,
+    autoplay:false,
+    genre1:'---',
+    genre2:'---',
+
+  }
+  var gui = new dat.gui.GUI();
+  //gui.remember(config)
+  // Choose from named values
+
+  //gui.add(config, 'year',[2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016]);
+  //gui.add(config, 'speed',[1,7,30]);
+  gui.add(config, 'autorotate');
+  var playController = gui.add(config, 'autoplay');
+
+  genresFolder = gui.addFolder('genres')
+  genresFolder.add(config,
+    'genre1',
+    ['---','electronic','pop','folk','rock','jazz','hip hop'])
+    .onFinishChange(function(){
+      activegenres = [config.genre1,config.genre2]
+      offsetTime(0);
+    });
+    genresFolder.add(config,
+      'genre2',
+      ['---','electronic','pop','folk','rock','jazz','hip hop'])
+      .onFinishChange(function(){
+        activegenres = [config.genre1,config.genre2]
+        offsetTime(0);
+      });
+  playController.onFinishChange(function(value) {
+    if(config.autoplay){
+      updateInterval =  setInterval(function(){offsetTime(7)},2000);
+    }else{
+      clearInterval(updateInterval);
+    }
+  });
+
+
+  $('.band').click(function(e){
+    var artistName = $(e.target).text();
+    showArtistConcerts(artistName)
+  })
+
+  controls = new THREE.OrbitControls(camera,renderer.domElement);;
+  controls.enableDamping = true;
+	controls.dampingFactor = 0.25;
+  controls.enableZoom    = true;
+
+  this.enableKeys        = false;
+  this.enablePan         = false;
+  this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
+
+
+  $('#prevDate').click(function(){
+    offsetTime(-7);
+  })
+
+  $('#nextDate').click(function(){
+    offsetTime(7);
+  })
+
+  function offsetTime(offset){
+    var currentDateIndex = Math.min(eventModel.timeline.length,
+      Math.max(0,eventModel.timeline.indexOf(currentDate)+offset));
+    var date = eventModel.timeline[currentDateIndex]
+    displayConcertsinDate(date);
+  }
+
+  //pallete
+  pallete     = {'electronic' : new THREE.Color(0x437BC4),
+                     'pop'        : new THREE.Color(0xA727C3),
+                     'folk'       : new THREE.Color(0xF0E44B),
+                     'rock'       : new THREE.Color(0xCF3D58),
+                     'jazz'       : new THREE.Color(0xE68E3E),
+                     'hip hop'    : new THREE.Color(0x6AC75C),
+                     'flamenco'    : new THREE.Color(0x00C700),
+                   }
+  activegenres = ['---','---']
+
+
+	//indicator
+  var geometry = new THREE.SphereBufferGeometry( 0.5, 10, 10 );
+  var material = new THREE.MeshBasicMaterial( {color: 0xffffff,opactiy:0.1,
+    depthTest: false,transparent:true} );
+  indicator = new THREE.Mesh( geometry, material )
+  indicator.visible = false
+
+
+//
+	raycaster = new THREE.Raycaster();
+	raycaster.params.Points.threshold = 2.0;
+
+	window.addEventListener( 'resize', onWindowResize, false );
+	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+  $('#container>canvas').click(onWorldClick);
+}
 
 function generateWorld(radius,points){
 
@@ -87,85 +232,6 @@ function generatePointcloud(radius,points,size,color,opacity) {
 	return pointcloud;
 }
 
-function init() {
-	var container = document.getElementById( 'container' );
-	scene = new THREE.Scene();
-  scene.background = new THREE.Color( 0x1E2E37 );
-	clock = new THREE.Clock();
-	camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-  camera.up = new THREE.Vector3(0,0,1);
-  camera.position.set(200,0,100)
-  camera.lookAt(new THREE.Vector3(0,0,0));
-
-  //load locations
-  console.log('loading');
-  $.getJSON( "http://localhost/gala/locations", function( data ) {
-    console.log('loaded!');
-    locations = data;
-    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
-  	pointCloud.position.set( 0,0,0 );
-  	scene.add( pointCloud );
-    pointCloud.add(indicator);
-    animate();
-
-  }).fail(function() {
-    console.log( "error" );
-  });
-
-  eventModel = new EventsModel();
-  eventModel.load("http://localhost/gala/timeline",
-    function(){
-      displayConcertsinDate('20140202')
-    }
-  );
-  //GUI
-  $('.band').click(function(e){
-    var artistName = $(e.target).text();
-    showArtistConcerts(artistName)
-  })
-
-  controls = new THREE.OrbitControls( camera );
-  controls.enableDamping = true;
-	controls.dampingFactor = 0.25;
-  controls.enableZoom    = true;
-
-  this.enableKeys        = false;
-  this.enablePan         = false;
-  this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
-
-
-  $('#prevDate').click(function(){
-    var currentDateIndex = Math.max(0,eventModel.timeline.indexOf(currentDate)-1);
-    var date = eventModel.timeline[currentDateIndex]
-    displayConcertsinDate(date);
-  })
-
-  $('#nextDate').click(function(){
-    var currentDateIndex = Math.min(eventModel.timeline.length,
-      eventModel.timeline.indexOf(currentDate)+1);
-    var date = eventModel.timeline[currentDateIndex]
-    displayConcertsinDate(date);
-  })
-	//indicator
-  var geometry = new THREE.SphereBufferGeometry( 1.5, 10, 10 );
-  var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-  indicator = new THREE.Mesh( geometry, material )
-  indicator.visible = false
-
-
-	renderer = new THREE.WebGLRenderer();
-	renderer.setPixelRatio( window.devicePixelRatio );
-	renderer.setSize( window.innerWidth, window.innerHeight );
-	container.appendChild( renderer.domElement );
-	//
-	raycaster = new THREE.Raycaster();
-	raycaster.params.Points.threshold = 2.0;
-
-	window.addEventListener( 'resize', onWindowResize, false );
-	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-  //document.addEventListener( 'mouseclick', onDocumentMouseClick, false );
-}
-
 function showArtistConcerts(artistName){
 
   $.getJSON( "http://localhost/gala/concerts/band/"+artistName, function( concerts ) {
@@ -186,9 +252,9 @@ function displayLocations(locationsIds,color,size){
     new TWEEN.Tween( prevLayerCloud.material.uniforms.opacity )
     .to( { value: 0 }, 600 )
     .onComplete(function(){
+      pointCloud.remove(prevLayerCloud)
       prevLayerCloud.geometry.dispose()
       prevLayerCloud.material.dispose()
-
     })
     .start();
   }
@@ -204,28 +270,19 @@ function displayLocations(locationsIds,color,size){
   layerCloud.position.set( 0,0,0 );
   pointCloud.add( layerCloud );
 
-  new TWEEN.Tween( layerCloud.material.uniforms.opacity ).to( { value: 0.8 }, 600 ).start();
+  new TWEEN.Tween( layerCloud.material.uniforms.opacity ).to( { value: 0.7 }, 600 ).start();
 
 }
 function displayConcertsinDate(date){
-  eventModel.getConcerts(date,function(concerts){
+  eventModel.getConcerts(date,activegenres,function(concerts){
 
     var locationIds = []
     var colors      = []
     var sizes       = []
 
-    var pallete     = {'electronic': new THREE.Color(0x437BC4),
-                       'pop'       : new THREE.Color(0xA727C3),
-                       'folk'      : new THREE.Color(0xF0E44B),
-                       'rock'      : new THREE.Color(0xCF3D58),
-                       'jazz'      : new THREE.Color(0xE68E3E),
-                       'hip hop'   : new THREE.Color(0x6AC75C)
-                     }
-    var activegenres = ['rock','jazz']
-
     for(var locationId in concerts){
         var concert = concerts[locationId];
-        var size = Math.min(100,concert['total'])
+        var size = 5 +  concert['total']*3
         var color = new THREE.Color('black');
 
         //normalization
@@ -276,6 +333,17 @@ function onDocumentMouseMove( event ) {
 	mouse.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
+function onWorldClick( event ) {
+	event.preventDefault();
+  if(indicator.visible){
+    var locationId = indicator.userData['locationId'];
+    eventModel.getLocation(locationId,function(locationInfo){
+      $('#addressLocality').text(locationInfo[0]);
+      $('#addressCountry').text(locationInfo[1]);
+
+    })
+  }
+}
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
@@ -306,18 +374,21 @@ function render() {
         }
       }
 
-      var locationIndex = layerCloudLocations[index];
+      var locationId = layerCloudLocations[index];
       var pointArray    = layerCloud.geometry.getAttribute( 'position' ).array;
       indicator.position.set(pointArray[index*3],pointArray[index*3+1],pointArray[index*3+2])
       indicator.visible = true;
+      indicator.userData['locationId'] = locationId
     }else{
       indicator.visible = false;
     }
 
   }
   controls.update();
-	//pointCloud.rotation.z += .0005;
-	camera.updateMatrixWorld();
+  if(config.autorotate){
+    pointCloud.rotation.z += .0005;
+  }
+  camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
 	renderer.render( scene, camera );
 }

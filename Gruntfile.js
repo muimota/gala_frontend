@@ -38,7 +38,8 @@ module.exports = function(grunt) {
               ['jquery/dist/jquery.min.js',
               'three.js/build/three.min.js',
               'three.js/examples/js/controls/OrbitControls.js',
-              'tween.js/src/Tween.js']
+              'tween.js/src/Tween.js',
+              'dat.gui/build/*']
               , dest: 'dist/libs/', expand: true, cwd: 'bower_components'},
           ],
         },

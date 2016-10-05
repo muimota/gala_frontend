@@ -4,8 +4,10 @@
 
 EventsModel = function(){
   this.locations = null; //location with concert in certain date
+  this.locationNames = {};
   this.timeline  = null; //timeline
   this.concerts  = {};
+  this.dayRange  = 7;
 }
 
 EventsModel.prototype.load = function(filename,callback){
@@ -23,11 +25,12 @@ EventsModel.prototype.load = function(filename,callback){
   })
 }
 
-EventsModel.prototype.getConcerts = function(date,callback){
+EventsModel.prototype.getConcerts = function(date,genres,callback){
 
-  var self = this;
-  var url = 'http://localhost/gala/concerts/dates/'+date
-  if(!(date in this.concerts)){
+  var self       = this;
+  var url = 'http://localhost/gala/concerts/dates/'+date+'/genres/'+genres.join('|')
+  console.log(url);
+  if(true){
 
     $.getJSON(url,function(concerts){
       self.concerts[date] = concerts;
@@ -38,6 +41,26 @@ EventsModel.prototype.getConcerts = function(date,callback){
   }else{
     if(callback != null){
       callback(self.concerts[date]);
+    }
+  }
+}
+
+EventsModel.prototype.getLocation = function(locationId,callback){
+
+  var self       = this;
+
+  var url = 'http://localhost/gala/locations/id/'+locationId
+  if(!(locationId in this.locationNames)){
+
+    $.getJSON(url,function(location){
+      self.locationNames[locationId] = location;
+      if(callback != null){
+        callback(self.locationNames[locationId]);
+      }
+    })
+  }else{
+    if(callback != null){
+      callback(self.locationNames[locationId]);
     }
   }
 }
