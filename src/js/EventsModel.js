@@ -7,7 +7,6 @@ EventsModel = function(){
   this.locationNames = {};
   this.timeline  = null; //timeline
   this.concerts  = {};
-  this.dayRange  = 7;
 }
 
 EventsModel.prototype.load = function(filename,callback){
@@ -25,10 +24,10 @@ EventsModel.prototype.load = function(filename,callback){
   })
 }
 
-EventsModel.prototype.getConcerts = function(date,genres,callback){
+EventsModel.prototype.getConcerts = function(date,daysInterval,genres,callback){
 
   var self       = this;
-  var url = 'http://localhost/gala/concerts/dates/'+date+'/genres/'+genres.join('|')
+  var url = 'http://localhost/gala/concerts/dates/'+date+'/'+daysInterval+'/genres/'+genres.join('|')
   console.log(url);
   if(true){
 

@@ -11,7 +11,7 @@ var mouse = new THREE.Vector2();
 var clock;
 var indicator;
 var controls;
-var palette,activegenres;
+var palette;
 var config
 var updateInterval;
 var eventModel;
@@ -52,59 +52,60 @@ function init() {
     console.log( "error" );
   });
 
-  eventModel = new EventsModel();
-  eventModel.load("http://localhost/gala/timeline",
-    function(){
-      displayConcertsinDate('20140202')
-    }
-  );
+
   //GUI
   config = {
-    speed:5,
-    year:2006,
+    date:"20060606",
+    daysInterval:7,
     autorotate:true,
     autoplay:false,
     genre1:'---',
     genre2:'---',
-
   }
+  config.activegenres=[config.genre1,config.genre2]
+  eventModel = new EventsModel();
+  eventModel.load("http://localhost/gala/timeline",
+    function(){
+      displayConcertsinDate(config.date,config.daysInterval,config.activegenres)
+    }
+  );
+
   var gui = new dat.gui.GUI();
-  //gui.remember(config)
+  gui.remember(config)
   // Choose from named values
 
-  //gui.add(config, 'year',[2006,2007,2008,2009,2010,2011,2012,2013,2014,2015,2016]);
-  //gui.add(config, 'speed',[1,7,30]);
+  gui.add(config, 'date').onFinishChange(function(date){
+    gotoDate(date);
+  });
+  gui.add(config, 'daysInterval',{'day':1,'week':7,'month':30,'6month':183,'year':365})
+  .onFinishChange(function(){offsetTime(0);})
   gui.add(config, 'autorotate');
-  var playController = gui.add(config, 'autoplay');
+  var playController = gui.add(config, 'autoplay').listen();
 
+  //compare genres
   genresFolder = gui.addFolder('genres')
   genresFolder.add(config,
     'genre1',
     ['---','electronic','pop','folk','rock','jazz','hip hop'])
     .onFinishChange(function(){
-      activegenres = [config.genre1,config.genre2]
+      config.activegenres = [config.genre1,config.genre2]
       offsetTime(0);
     });
     genresFolder.add(config,
       'genre2',
       ['---','electronic','pop','folk','rock','jazz','hip hop'])
       .onFinishChange(function(){
-        activegenres = [config.genre1,config.genre2]
+        config.activegenres = [config.genre1,config.genre2]
         offsetTime(0);
       });
+
   playController.onFinishChange(function(value) {
     if(config.autoplay){
-      updateInterval =  setInterval(function(){offsetTime(7)},2000);
+      updateInterval =  setInterval(function(){offsetTime(config.daysInterval)},2000);
     }else{
       clearInterval(updateInterval);
     }
   });
-
-
-  $('.band').click(function(e){
-    var artistName = $(e.target).text();
-    showArtistConcerts(artistName)
-  })
 
   controls = new THREE.OrbitControls(camera,renderer.domElement);;
   controls.enableDamping = true;
@@ -117,30 +118,41 @@ function init() {
 
 
   $('#prevDate').click(function(){
-    offsetTime(-7);
+    offsetTime(-config.daysInterval);
   })
 
   $('#nextDate').click(function(){
-    offsetTime(7);
+    offsetTime(config.daysInterval);
   })
 
+  function gotoDate(date){
+
+    var i;
+    for(var i=0;i<eventModel.timeline.length;i++){
+      if(date <= eventModel.timeline[i]){
+        break;
+      }
+    }
+    displayConcertsinDate(eventModel.timeline[i],config.daysInterval,config.activegenres);
+  }
+
   function offsetTime(offset){
+    offset = parseInt(offset)
     var currentDateIndex = Math.min(eventModel.timeline.length,
       Math.max(0,eventModel.timeline.indexOf(currentDate)+offset));
     var date = eventModel.timeline[currentDateIndex]
-    displayConcertsinDate(date);
+    displayConcertsinDate(date,config.daysInterval,config.activegenres);
   }
 
   //pallete
   pallete     = {'electronic' : new THREE.Color(0x437BC4),
-                     'pop'        : new THREE.Color(0xA727C3),
-                     'folk'       : new THREE.Color(0xF0E44B),
-                     'rock'       : new THREE.Color(0xCF3D58),
-                     'jazz'       : new THREE.Color(0xE68E3E),
-                     'hip hop'    : new THREE.Color(0x6AC75C),
-                     'flamenco'    : new THREE.Color(0x00C700),
+                 'pop'        : new THREE.Color(0xA727C3),
+                 'folk'       : new THREE.Color(0xF0E44B),
+                 'rock'       : new THREE.Color(0xCF3D58),
+                 'jazz'       : new THREE.Color(0xE68E3E),
+                 'hip hop'    : new THREE.Color(0x6AC75C),
+                 'flamenco'   : new THREE.Color(0x00C700),
                    }
-  activegenres = ['---','---']
 
 
 	//indicator
@@ -273,8 +285,8 @@ function displayLocations(locationsIds,color,size){
   new TWEEN.Tween( layerCloud.material.uniforms.opacity ).to( { value: 0.7 }, 600 ).start();
 
 }
-function displayConcertsinDate(date){
-  eventModel.getConcerts(date,activegenres,function(concerts){
+function displayConcertsinDate(date,daysInterval,activegenres){
+  eventModel.getConcerts(date,daysInterval,activegenres,function(concerts){
 
     var locationIds = []
     var colors      = []
@@ -282,7 +294,7 @@ function displayConcertsinDate(date){
 
     for(var locationId in concerts){
         var concert = concerts[locationId];
-        var size = 5 +  concert['total']*3
+        var size = Math.min(30,5 +  concert['total']*3)
         var color = new THREE.Color('black');
 
         //normalization
@@ -337,6 +349,7 @@ function onWorldClick( event ) {
 	event.preventDefault();
   if(indicator.visible){
     var locationId = indicator.userData['locationId'];
+    config.autorotate = false;
     eventModel.getLocation(locationId,function(locationInfo){
       $('#addressLocality').text(locationInfo[0]);
       $('#addressCountry').text(locationInfo[1]);
