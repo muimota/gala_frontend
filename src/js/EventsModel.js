@@ -11,15 +11,11 @@ EventsModel = function(){
 
 EventsModel.prototype.load = function(filename,callback){
   var self = this;
-  $.getJSON(filename,function(locations){
-    self.locations = locations;
-    self.timeline = [];
-    for(var date in self.locations){
-      self.timeline.push(date);
-    }
-    self.timeline.sort();
+  $.getJSON(filename,function(timeline){
+    self.timeline = timeline
+    self.timeline.sort()
     if(callback != null){
-      callback(this.data);
+      callback(this.timeline)
     }
   })
 }
