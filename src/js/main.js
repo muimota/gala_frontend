@@ -37,20 +37,27 @@ function init() {
   camera.position.set(200,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
+	//eventModel = new EventsModel('http://localhost/gala/')
+	eventModel = new EventsModel('http://vps325937.ovh.net/gala/')
+
   //load locations
   console.log('loading');
-  $.getJSON( "http://localhost/gala/locations", function( data ) {
-    console.log('loaded!');
-    locations = data;
-    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
-  	pointCloud.position.set( 0,0,0 );
-  	scene.add( pointCloud );
-    pointCloud.add(indicator);
-    animate();
 
-  }).fail(function() {
-    console.log( "error" );
-  });
+	eventModel.loadTimeline(
+    function(){
+			var url = eventModel.rootUrl + 'locations'
+			$.getJSON( url , function( data ) {
+		    console.log('loaded!');
+		    locations = data;
+		    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
+		  	pointCloud.position.set( 0,0,0 );
+		  	scene.add( pointCloud );
+		    pointCloud.add(indicator);
+				displayConcertsinDate(config.date,config.daysInterval,config.activegenres)
+				animate()
+		  })
+    }
+  )
 
 
   //GUI
@@ -63,12 +70,8 @@ function init() {
     genre2:'---',
   }
   config.activegenres=[config.genre1,config.genre2]
-  eventModel = new EventsModel();
-  eventModel.load("http://localhost/gala/timeline",
-    function(){
-      displayConcertsinDate(config.date,config.daysInterval,config.activegenres)
-    }
-  );
+
+
 
   var gui = new dat.gui.GUI();
   gui.remember(config)
@@ -243,7 +246,7 @@ function generatePointcloud(radius,points,size,color,opacity) {
 	var pointcloud = new THREE.Points( geometry, shaderMaterial );
 	return pointcloud;
 }
-
+/*
 function showArtistConcerts(artistName){
 
   $.getJSON( "http://localhost/gala/concerts/band/"+artistName, function( concerts ) {
@@ -257,6 +260,8 @@ function showArtistConcerts(artistName){
     displayLocations(concertLocations,new THREE.Color('red'),10);
   });
 }
+*/
+
 //updates locations in map
 function displayLocations(locationsIds,color,size){
   if(layerCloud != undefined){

@@ -2,16 +2,17 @@
 // {date:[locationIds ...]}
 //is going to store all the info
 
-EventsModel = function(){
-  this.locations = null; //location with concert in certain date
+EventsModel = function(rootUrl){
+  this.locations     = null; //location with concert in certain date
   this.locationNames = {};
-  this.timeline  = null; //timeline
-  this.concerts  = {};
+  this.timeline      = null; //timeline
+  this.concerts      = {};
+  this.rootUrl       = rootUrl
 }
 
-EventsModel.prototype.load = function(filename,callback){
+EventsModel.prototype.loadTimeline = function(callback){
   var self = this;
-  $.getJSON(filename,function(timeline){
+  $.getJSON(this.rootUrl + 'timeline/',function(timeline){
     self.timeline = timeline
     self.timeline.sort()
     if(callback != null){
@@ -23,7 +24,7 @@ EventsModel.prototype.load = function(filename,callback){
 EventsModel.prototype.getConcerts = function(date,daysInterval,genres,callback){
 
   var self       = this;
-  var url = 'http://localhost/gala/concerts/dates/'+date+'/'+daysInterval+'/genres/'+genres.join('|')
+  var url = this.rootUrl + 'concerts/dates/'+date+'/'+daysInterval+'/genres/'+genres.join('|')
   console.log(url);
   if(true){
 
@@ -44,7 +45,7 @@ EventsModel.prototype.getLocation = function(locationId,callback){
 
   var self       = this;
 
-  var url = 'http://localhost/gala/locations/id/'+locationId
+  var url = this.rootUrl + 'locations/id/'+locationId
   if(!(locationId in this.locationNames)){
 
     $.getJSON(url,function(location){
