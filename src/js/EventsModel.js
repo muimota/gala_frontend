@@ -24,7 +24,7 @@ EventsModel.prototype.loadTimeline = function(callback){
 EventsModel.prototype.getConcerts = function(date,daysInterval,genres,callback){
 
   var self       = this;
-  var url = this.rootUrl + 'concerts/dates/'+date+'/'+daysInterval+'/genres/'+genres.join('|')
+  var url = this.rootUrl + 'concerts/dates/'+date+'/'+daysInterval
   console.log(url);
   if(true){
 
@@ -41,11 +41,11 @@ EventsModel.prototype.getConcerts = function(date,daysInterval,genres,callback){
   }
 }
 
-EventsModel.prototype.getLocation = function(locationId,callback){
+EventsModel.prototype.getLocationName = function(locationId,callback){
 
   var self       = this;
 
-  var url = this.rootUrl + 'locations/id/'+locationId
+  var url = this.rootUrl + 'locations/'+locationId
   if(!(locationId in this.locationNames)){
 
     $.getJSON(url,function(location){
@@ -59,12 +59,4 @@ EventsModel.prototype.getLocation = function(locationId,callback){
       callback(self.locationNames[locationId]);
     }
   }
-}
-
-EventsModel.prototype.getLocations = function(date){
-  var locations = []
-  if ( date in this.locations){
-    locations =  this.locations[date];
-  }
-  return locations
 }

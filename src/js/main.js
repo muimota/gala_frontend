@@ -13,7 +13,7 @@ var indicator;
 var controls;
 var palette;
 var config
-var updateInterval;
+var timeoutHandler;
 var eventModel;
 init();
 
@@ -37,8 +37,8 @@ function init() {
   camera.position.set(200,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
-	//eventModel = new EventsModel('http://localhost/gala/')
-	eventModel = new EventsModel('http://vps325937.ovh.net/gala/')
+	eventModel = new EventsModel('http://gala.muimota.net/gala/')
+	//eventModel = new EventsModel('/gala/')
 
   //load locations
   console.log('loading');
@@ -53,7 +53,7 @@ function init() {
 		  	pointCloud.position.set( 0,0,0 );
 		  	scene.add( pointCloud );
 		    pointCloud.add(indicator);
-				displayConcertsinDate(config.date,config.daysInterval,config.activegenres)
+				displayConcertsinDate(config.date,config.timeInterval,config.activegenres)
 				animate()
 		  })
     }
@@ -62,16 +62,14 @@ function init() {
 
   //GUI
   config = {
-    date:"20060606",
-    daysInterval:7,
+    date:'20060101',
+    timeInterval:'M',
     autorotate:true,
     autoplay:false,
-    genre1:'---',
+    genre1:'rock',
     genre2:'---',
   }
   config.activegenres=[config.genre1,config.genre2]
-
-
 
   var gui = new dat.gui.GUI();
   gui.remember(config)
@@ -80,7 +78,8 @@ function init() {
   gui.add(config, 'date').onFinishChange(function(date){
     gotoDate(date);
   });
-  gui.add(config, 'daysInterval',{'day':1,'week':7,'month':30,'6month':183,'year':365})
+
+  gui.add(config, 'timeInterval',{'day':'D','week':'W','month':'M','6month':'H','year':'Y'})
   .onFinishChange(function(){offsetTime(0);})
   gui.add(config, 'autorotate');
   var playController = gui.add(config, 'autoplay').listen();
@@ -102,13 +101,20 @@ function init() {
         offsetTime(0);
       });
 
+	//autoplay
   playController.onFinishChange(function(value) {
-    if(config.autoplay){
-      updateInterval =  setInterval(function(){offsetTime(config.daysInterval)},2000);
-    }else{
-      clearInterval(updateInterval);
-    }
-  });
+
+		function nextStep(){
+			offsetTime( 1,config.timeInterval,
+				function(){
+					setTimeout(nextStep,2000);
+				}
+			)
+		}
+		nextStep()
+
+	});
+
 
   controls = new THREE.OrbitControls(camera,renderer.domElement);;
   controls.enableDamping = true;
@@ -121,14 +127,14 @@ function init() {
 
 
   $('#prevDate').click(function(){
-    offsetTime(-config.daysInterval);
+    offsetTime(-1,config.timeInterval);
   })
 
   $('#nextDate').click(function(){
-    offsetTime(config.daysInterval);
+    offsetTime( 1,config.timeInterval);
   })
 
-  function gotoDate(date){
+  function gotoDate(date,callback){
 
     var i;
     for(var i=0;i<eventModel.timeline.length;i++){
@@ -136,15 +142,33 @@ function init() {
         break;
       }
     }
-    displayConcertsinDate(eventModel.timeline[i],config.daysInterval,config.activegenres);
+    displayConcertsinDate(eventModel.timeline[i],config.timeInterval,config.activegenres,callback);
   }
 
-  function offsetTime(offset){
-    offset = parseInt(offset)
+  function offsetTime(timeDirection,tInterval,callback){
+
+
+		if(tInterval == undefined){
+			timeOffset = 0
+		}else if(tInterval == 'Y'){
+			timeOffset = 365
+		}else if(tInterval == 'H'){
+			timeOffset = 180
+		}else if(tInterval == 'M'){
+			timeOffset = 30
+		}else if(tInterval == 'W'){
+			timeOffset = 7
+		}else {
+			timeOffset = 1
+		}
+
+
+		timeOffset *= timeDirection
+
     var currentDateIndex = Math.min(eventModel.timeline.length,
-      Math.max(0,eventModel.timeline.indexOf(currentDate)+offset));
+      Math.max(0,eventModel.timeline.indexOf(currentDate)+timeOffset));
     var date = eventModel.timeline[currentDateIndex]
-    displayConcertsinDate(date,config.daysInterval,config.activegenres);
+    displayConcertsinDate(date,config.timeInterval,config.activegenres,callback);
   }
 
   //pallete
@@ -153,9 +177,8 @@ function init() {
                  'folk'       : new THREE.Color(0xF0E44B),
                  'rock'       : new THREE.Color(0xCF3D58),
                  'jazz'       : new THREE.Color(0xE68E3E),
-                 'hip hop'    : new THREE.Color(0x6AC75C),
-                 'flamenco'   : new THREE.Color(0x00C700),
-                   }
+                 'hip hop'    : new THREE.Color(0x6AC75C)
+                }
 
 
 	//indicator
@@ -228,7 +251,7 @@ function generatePointcloud(radius,points,size,color,opacity) {
   uniforms = {
    color:     { value: new THREE.Color( 0xffffff ) },
    opacity:   { value: opacity},
-   texture:   { value: THREE.ImageUtils.loadTexture( '../img/particleTexture.png' )}
+   texture:   { value: THREE.ImageUtils.loadTexture( 'img/particleTexture.png' )}
 	};
 
 	var shaderMaterial = new THREE.ShaderMaterial( {
@@ -246,21 +269,7 @@ function generatePointcloud(radius,points,size,color,opacity) {
 	var pointcloud = new THREE.Points( geometry, shaderMaterial );
 	return pointcloud;
 }
-/*
-function showArtistConcerts(artistName){
 
-  $.getJSON( "http://localhost/gala/concerts/band/"+artistName, function( concerts ) {
-
-
-    var concertLocations = []
-    for(var date in concerts){
-      var locationId = concerts[date][1];
-      concertLocations.push(locationId)
-    }
-    displayLocations(concertLocations,new THREE.Color('red'),10);
-  });
-}
-*/
 
 //updates locations in map
 function displayLocations(locationsIds,color,size){
@@ -290,8 +299,8 @@ function displayLocations(locationsIds,color,size){
   new TWEEN.Tween( layerCloud.material.uniforms.opacity ).to( { value: 0.7 }, 600 ).start();
 
 }
-function displayConcertsinDate(date,daysInterval,activegenres){
-  eventModel.getConcerts(date,daysInterval,activegenres,function(concerts){
+function displayConcertsinDate(date,timeInterval,activegenres,callback){
+  eventModel.getConcerts(date,timeInterval,activegenres,function(concerts){
 
     var locationIds = []
     var colors      = []
@@ -332,18 +341,15 @@ function displayConcertsinDate(date,daysInterval,activegenres){
 
     currentDate = date;
     $('#concertDate').text(date);
-
     displayLocations(locationIds,colors,sizes)
+
+		if(callback != undefined){
+			callback()
+		}
+
   });
 }
 
-function displayConcertsLocationsinDate(date){
-  var concertLocationIds = eventModel.getLocations(date);
-  currentDate = date;
-  $('#concertDate').text(date);
-
-  displayLocations(concertLocationIds,new THREE.Color('#F00F22'),10.0)
-}
 
 function onDocumentMouseMove( event ) {
 	event.preventDefault();
@@ -354,11 +360,10 @@ function onWorldClick( event ) {
 	event.preventDefault();
   if(indicator.visible){
     var locationId = indicator.userData['locationId'];
-    config.autorotate = false;
-    eventModel.getLocation(locationId,function(locationInfo){
+    //config.autorotate = false;
+    eventModel.getLocationName(locationId,function(locationInfo){
       $('#addressLocality').text(locationInfo[0]);
       $('#addressCountry').text(locationInfo[1]);
-
     })
   }
 }
