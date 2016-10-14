@@ -37,8 +37,8 @@ function init() {
   camera.position.set(200,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
-	eventModel = new EventsModel('http://gala.muimota.net/gala/')
-	//eventModel = new EventsModel('/gala/')
+	//eventModel = new EventsModel('http://gala.muimota.net/gala/')
+	eventModel = new EventsModel('/gala/')
 
   //load locations
   console.log('loading');
@@ -104,14 +104,21 @@ function init() {
 	//autoplay
   playController.onFinishChange(function(value) {
 
-		function nextStep(){
-			offsetTime( 1,config.timeInterval,
-				function(){
-					setTimeout(nextStep,2000);
-				}
-			)
+		if(value == true){
+
+			//@TODO:move to another function
+			function nextStep(){
+				offsetTime( 1,config.timeInterval,
+					function(){
+						timeoutHandler = setTimeout(nextStep,2000);
+					}
+				)
+			}
+
+			nextStep()
+		}else{
+			clearTimeout(timeoutHandler)
 		}
-		nextStep()
 
 	});
 
