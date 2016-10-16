@@ -1,9 +1,9 @@
 //martin nadal
 var renderer, scene, camera, stats;
-var locations;     //id:[lat,lng]
-var events;        //events {date:[eventId,locationId]}
-var pointCloud;    // all locations
-var layerCloud;    // highlighted locations
+var locations;          // id:[lat,lng]
+var events;             // events {date:[eventId,locationId]}
+var pointCloud;         // all locations
+var layerCloud;         // highlighted locations
 var layerCloudLocations;// [locationIndex ..] tabla de la geometrya de layer
 var currentDate;
 var raycaster;
@@ -315,7 +315,7 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
 
     for(var locationId in concerts){
         var concert = concerts[locationId];
-        var size = Math.min(30,5 +  concert['total']*3)
+        var size  = 5;
         var color = new THREE.Color('black');
 
         //normalization
@@ -324,10 +324,10 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
           var musicStyle = activegenres[i]
           if(musicStyle in concert){
               tagged += concert[musicStyle]
+							size   += concert[musicStyle]
           }
         }
         if(tagged == 0 ){
-            //color.set('white')
             continue;
         }else{
           for(var i=0;i<activegenres.length;i++){
@@ -340,6 +340,9 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
             }
           }
         }
+				//clamp size
+				size = Math.min(30,size)
+
         colors.push(color)
         sizes.push(size)
         locationIds.push(locationId)
@@ -372,6 +375,26 @@ function onWorldClick( event ) {
       $('#addressLocality').text(locationInfo[0]);
       $('#addressCountry').text(locationInfo[1]);
     })
+		eventModel.getArtists(currentDate,config.timeInterval,locationId,function(artists){
+
+			var artistsGenre1 = []
+			var artistsGenre2 = []
+
+			if(config.genre1 in artists){
+				artistsGenre1 = artists[config.genre1]
+			}
+			if(config.genre2 in artists){
+				artistsGenre2 = artists[config.genre2]
+			}
+			var artists = artistsGenre1.concat(artistsGenre2)
+			//remove duplicates
+			//http://stackoverflow.com/a/9229821/2205297
+			uniqueArray = artists.filter(function(item, pos) {
+    		return artists.indexOf(item) == pos;
+			})
+			console.log(artists)
+			$('#artists').html(artists.join('<br>'))
+		})
   }
 }
 function onWindowResize() {
