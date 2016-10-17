@@ -33,6 +33,7 @@ module.exports = function(grunt) {
             {src: 'js/**/*.js', dest: 'dist/', expand: true, cwd: 'src/'},
             {src: '*', dest: 'dist/data/', expand: true, cwd: 'src/data'},
             {src: '*', dest: 'dist/img/', expand: true, cwd: 'src/img'},
+            {src: '**/*', dest: 'dist/css/', expand: true, cwd: 'src/css'},
             {src: '*.html', dest: 'dist/', expand: true, cwd: 'src/'},
             {src:
               ['jquery/dist/jquery.min.js',
@@ -52,5 +53,5 @@ module.exports = function(grunt) {
 
     grunt.registerTask('default',['copy']);
     grunt.registerTask('server',['copy','connect','watch']);
-    
+
 }

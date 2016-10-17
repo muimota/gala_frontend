@@ -29,14 +29,19 @@ EventsModel.monthInterval    = 'M'
 EventsModel.halfYearInterval = 'H'
 EventsModel.yearInterval     = 'Y'
 
+EventsModel.parseDate = function(strDate){
+  var year    = parseInt(strDate.substring(0,4))
+  var month   = parseInt(strDate.substring(4,6)) - 1
+  var day     = parseInt(strDate.substring(6,8))
+
+  return  new Date(year,month,day)
+
+}
 
 //calcula la fecha correcta para usar en el cache
 EventsModel.calculateDate = function(strDate,daysInterval){
 
-  var year    = parseInt(strDate.substring(0,4))
-  var month   = parseInt(strDate.substring(4,6)) - 1
-  var day     = parseInt(strDate.substring(6,8))
-  var date    = new Date(year,month,day)
+  var date    = EventsModel.parseDate(strDate)
 
   if(daysInterval == EventsModel.weekInterval){
 
@@ -50,7 +55,7 @@ EventsModel.calculateDate = function(strDate,daysInterval){
     date.setDate(1)
   }else if(daysInterval == EventsModel.halfYearInterval){
     date.setDate(1)
-    if(month>6){
+    if(date.getMonth()>=6){
       date.setMonth(7)
     }else{
       date.setMonth(1)
@@ -59,7 +64,8 @@ EventsModel.calculateDate = function(strDate,daysInterval){
     date.setMonth(1)
     date.setDate(1)
   }
-  return ''+date.getFullYear()+('0'+date.getMonth()).slice(-2)+
+
+  return ''+date.getFullYear()+('0'+(date.getMonth()+1)).slice(-2)+
   ('0'+date.getDate()).slice(-2)
 }
 

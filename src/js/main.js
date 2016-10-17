@@ -36,8 +36,8 @@ function init() {
   camera.position.set(200,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
-	eventModel = new EventsModel('http://gala.muimota.net/gala/')
-	//eventModel = new EventsModel('/gala/')
+	//eventModel = new EventsModel('http://gala.muimota.net/gala/')
+	eventModel = new EventsModel('/gala/')
 
   //load locations
   console.log('loading');
@@ -61,7 +61,7 @@ function init() {
 
   //GUI
   config = {
-    date:'20060101',
+    date:'20100101',
     timeInterval:'M',
     autorotate:true,
     autoplay:false,
@@ -88,7 +88,7 @@ function init() {
 	gui.add(config, 'prev')
 
   gui.add(config, 'timeInterval',{'day':'D','week':'W','month':'M','6month':'H','year':'Y'})
-  .onFinishChange(function(){offsetTime(0);})
+  .onFinishChange(function(){offsetTime(0,config.timeInterval);})
   gui.add(config, 'autorotate');
   var playController = gui.add(config, 'autoplay').listen();
 
@@ -99,14 +99,14 @@ function init() {
     ['---','electronic','pop','folk','rock','jazz','hip hop'])
     .onFinishChange(function(){
       config.activegenres = [config.genre1,config.genre2]
-      offsetTime(0);
+      offsetTime(0,config.timeInterval);
     });
     genresFolder.add(config,
       'genre2',
       ['---','electronic','pop','folk','rock','jazz','hip hop'])
       .onFinishChange(function(){
         config.activegenres = [config.genre1,config.genre2]
-        offsetTime(0);
+        offsetTime(0,config.timeInterval);
       });
 	genresFolder.open()
 	//autoplay
@@ -152,30 +152,27 @@ function init() {
     displayConcertsinDate(eventModel.timeline[i],config.timeInterval,config.activegenres,callback);
   }
 
-  function offsetTime(timeDirection,tInterval,callback){
+  function offsetTime(timeDirection,timeInterval,callback){
 
 
-		if(tInterval == undefined){
-			timeOffset = 0
-		}else if(tInterval == 'Y'){
-			timeOffset = 365
-		}else if(tInterval == 'H'){
-			timeOffset = 180
-		}else if(tInterval == 'M'){
-			timeOffset = 31
-		}else if(tInterval == 'W'){
-			timeOffset = 7
-		}else {
-			timeOffset = 1
+		var date = EventsModel.parseDate(config.date)
+
+		if(timeInterval == EventsModel.weekInterval){
+			date.setDate(date.getDate()+7*timeDirection)
+		}else if(timeInterval == EventsModel.monthInterval){
+			date.setMonth(date.getMonth()+1*timeDirection)
+		}else if(timeInterval == EventsModel.halfYearInterval){
+			date.setMonth(date.getMonth()+6*timeDirection)
+		}else{
+			date.setDate(date.getDate()+timeDirection)
 		}
 
+		var dateStr = ''+date.getFullYear()+('0'+(date.getMonth()+1)).slice(-2)+
+	  ('0'+date.getDate()).slice(-2)
 
-		timeOffset *= timeDirection
+		config.date = EventsModel.calculateDate(dateStr,timeInterval)
 
-    var currentDateIndex = Math.min(eventModel.timeline.length,
-      Math.max(0,eventModel.timeline.indexOf(config.date)+timeOffset));
-    var date = EventsModel.calculateDate(eventModel.timeline[currentDateIndex+timeOffset],config.timeInterval)
-    displayConcertsinDate(date,config.timeInterval,config.activegenres,callback);
+		displayConcertsinDate(config.date,config.timeInterval,config.activegenres,callback);
   }
 
   //pallete
@@ -308,7 +305,9 @@ function displayLocations(locationsIds,color,size){
 
 }
 function displayConcertsinDate(date,timeInterval,activegenres,callback){
-
+	$('#addressCountry').html('')
+	$('#addressLocality').html('')
+	$('#artists').html('traveling through time...')
   eventModel.getConcerts(date,timeInterval,activegenres,function(concerts){
 
     var locationIds = []
@@ -347,7 +346,7 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
           }
         }
 				//clamp size
-				size = Math.min(30,size)
+				size = Math.min(30,size*1.2)
 
         colors.push(color)
         sizes.push(size)
@@ -374,14 +373,22 @@ function onDocumentMouseMove( event ) {
 }
 
 function onWorldClick( event ) {
+
 	event.preventDefault();
+
   if(indicator.visible){
+		//clear UI
+		$('#artists').html('searching artists...')
+		$('#addressCountry').html('')
+		$('#addressLocality').html('')
+		config.autoplay = false
     var locationId = indicator.userData['locationId'];
     //config.autorotate = false;
     eventModel.getLocationName(locationId,function(locationInfo){
       $('#addressLocality').text(locationInfo[0]);
       $('#addressCountry').text(locationInfo[1]);
     })
+
 		eventModel.getArtists(config.date,config.timeInterval,locationId,function(artists){
 
 			var artistsGenre1 = []
@@ -400,6 +407,12 @@ function onWorldClick( event ) {
     		return artists.indexOf(item) == pos;
 			})
 			console.log(artists)
+			if(artists.length > 5){
+				//number of artists that don't fit
+				var uncreditedArtists = '(+' + (artists.length-5) + ')'
+				artists = artists.slice(0,5)
+				artists.push(uncreditedArtists)
+			}
 			$('#artists').html(artists.join('<br>'))
 		})
   }
