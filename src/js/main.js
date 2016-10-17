@@ -5,7 +5,6 @@ var events;             // events {date:[eventId,locationId]}
 var pointCloud;         // all locations
 var layerCloud;         // highlighted locations
 var layerCloudLocations;// [locationIndex ..] tabla de la geometrya de layer
-var currentDate;
 var raycaster;
 var mouse = new THREE.Vector2();
 var clock;
@@ -37,8 +36,8 @@ function init() {
   camera.position.set(200,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
-	//eventModel = new EventsModel('http://gala.muimota.net/gala/')
-	eventModel = new EventsModel('/gala/')
+	eventModel = new EventsModel('http://gala.muimota.net/gala/')
+	//eventModel = new EventsModel('/gala/')
 
   //load locations
   console.log('loading');
@@ -68,6 +67,12 @@ function init() {
     autoplay:false,
     genre1:'rock',
     genre2:'---',
+		prev:function(){
+	    offsetTime(-1,config.timeInterval);
+	  },
+		next:function(){
+	    offsetTime( 1,config.timeInterval);
+	  }
   }
   config.activegenres=[config.genre1,config.genre2]
 
@@ -77,7 +82,10 @@ function init() {
 
   gui.add(config, 'date').onFinishChange(function(date){
     gotoDate(date);
-  });
+  }).listen();
+	//controle buttons
+	gui.add(config, 'next')
+	gui.add(config, 'prev')
 
   gui.add(config, 'timeInterval',{'day':'D','week':'W','month':'M','6month':'H','year':'Y'})
   .onFinishChange(function(){offsetTime(0);})
@@ -100,13 +108,14 @@ function init() {
         config.activegenres = [config.genre1,config.genre2]
         offsetTime(0);
       });
-
+	genresFolder.open()
 	//autoplay
   playController.onFinishChange(function(value) {
 
 		if(value == true){
 
 			//@TODO:move to another function
+
 			function nextStep(){
 				offsetTime( 1,config.timeInterval,
 					function(){
@@ -132,15 +141,6 @@ function init() {
   this.enablePan         = false;
   this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
 
-
-  $('#prevDate').click(function(){
-    offsetTime(-1,config.timeInterval);
-  })
-
-  $('#nextDate').click(function(){
-    offsetTime( 1,config.timeInterval);
-  })
-
   function gotoDate(date,callback){
 
     var i;
@@ -162,7 +162,7 @@ function init() {
 		}else if(tInterval == 'H'){
 			timeOffset = 180
 		}else if(tInterval == 'M'){
-			timeOffset = 30
+			timeOffset = 31
 		}else if(tInterval == 'W'){
 			timeOffset = 7
 		}else {
@@ -173,8 +173,8 @@ function init() {
 		timeOffset *= timeDirection
 
     var currentDateIndex = Math.min(eventModel.timeline.length,
-      Math.max(0,eventModel.timeline.indexOf(currentDate)+timeOffset));
-    var date = eventModel.timeline[currentDateIndex]
+      Math.max(0,eventModel.timeline.indexOf(config.date)+timeOffset));
+    var date = EventsModel.calculateDate(eventModel.timeline[currentDateIndex+timeOffset],config.timeInterval)
     displayConcertsinDate(date,config.timeInterval,config.activegenres,callback);
   }
 
@@ -280,7 +280,8 @@ function generatePointcloud(radius,points,size,color,opacity) {
 
 //updates locations in map
 function displayLocations(locationsIds,color,size){
-  if(layerCloud != undefined){
+	//fade out previus layerCloud
+	if(layerCloud != undefined){
     var prevLayerCloud = layerCloud;
     new TWEEN.Tween( prevLayerCloud.material.uniforms.opacity )
     .to( { value: 0 }, 600 )
@@ -307,12 +308,17 @@ function displayLocations(locationsIds,color,size){
 
 }
 function displayConcertsinDate(date,timeInterval,activegenres,callback){
+
   eventModel.getConcerts(date,timeInterval,activegenres,function(concerts){
 
     var locationIds = []
     var colors      = []
     var sizes       = []
 
+		//clear UI
+		$('#artists').html('')
+		$('#addressCountry').html('')
+		$('#addressLocality').html('')
     for(var locationId in concerts){
         var concert = concerts[locationId];
         var size  = 5;
@@ -349,7 +355,7 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
 
     }
 
-    currentDate = date;
+    config.date = date;
     $('#concertDate').text(date);
     displayLocations(locationIds,colors,sizes)
 
@@ -366,6 +372,7 @@ function onDocumentMouseMove( event ) {
 	mouse.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
+
 function onWorldClick( event ) {
 	event.preventDefault();
   if(indicator.visible){
@@ -375,7 +382,7 @@ function onWorldClick( event ) {
       $('#addressLocality').text(locationInfo[0]);
       $('#addressCountry').text(locationInfo[1]);
     })
-		eventModel.getArtists(currentDate,config.timeInterval,locationId,function(artists){
+		eventModel.getArtists(config.date,config.timeInterval,locationId,function(artists){
 
 			var artistsGenre1 = []
 			var artistsGenre2 = []
