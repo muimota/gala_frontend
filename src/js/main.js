@@ -132,14 +132,14 @@ function init() {
 	});
 
 
-  controls = new THREE.OrbitControls(camera,renderer.domElement);;
+  controls = new THREE.OrbitControls(camera,renderer.domElement)
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
   controls.enableZoom    = true;
 
-  this.enableKeys        = false;
-  this.enablePan         = false;
-  this.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
+  controls.enableKeys        = false;
+  controls.enablePan         = false;
+  controls.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
 
   function gotoDate(date,callback){
 
@@ -220,6 +220,7 @@ function generateWorld(radius,points){
       positions[ 3 * i ]     = x
       positions[ 3 * i + 1 ] = y
       positions[ 3 * i + 2 ] = z
+
 
     }
     geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
