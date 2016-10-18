@@ -4,7 +4,12 @@
 		<title>three.js webgl - interactive - raycasting - points</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+		<!-- <link href="libs/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+		<link href="libs/flat-ui/dist/css/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+		<link href="libs/flat-ui/dist/css/flat-ui.css" rel="stylesheet">
 		<link href="css/style.css" rel="stylesheet">
+
 		<script type="x-shader/x-vertex" id="vertexshader">
 			attribute float size;
 			attribute vec3 customColor;
@@ -28,10 +33,40 @@
 				gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
 			}
 		</script>
+
+
 	</head>
 
 	<body>
-		<div id="container"></div>
+		<div id="container" ></div>
+		<div id="controls" >
+
+			<label class="checkbox" for="checkRock">
+        <input type="checkbox" data-toggle="checkbox" value="" id="checkRock" required>
+        rock
+      </label>
+			<label class="checkbox" for="checkElectronic">
+				<input type="checkbox" data-toggle="checkbox" value="" id="checkElectronic" required>
+				electro
+			</label>
+			<label class="checkbox" for="checkPop">
+				<input type="checkbox" data-toggle="checkbox" value="" id="checkPop" required>
+				pop
+			</label>
+			<label class="checkbox" for="checkFolk">
+				<input type="checkbox" data-toggle="checkbox" value="" id="checkFolk" required>
+				folk
+			</label>
+			<label class="checkbox" for="checkHiphop">
+				<input type="checkbox" data-toggle="checkbox" value="" id="checkHiphop" required>
+				hiphop
+			</label>
+			<label class="checkbox" for="checkJazz">
+				<input type="checkbox" data-toggle="checkbox" value="" id="checkJazz" required>
+				jazz
+			</label>
+
+		</div>
 
 		<div id="info">
 			<span id="addressLocality"></span>&nbsp; <span id="addressCountry"></span>
@@ -43,7 +78,22 @@
 		<script src="libs/three.js/build/three.min.js"></script>
 		<script src="libs/three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="libs/jquery/dist/jquery.min.js"></script>
+		<script src="libs/flat-ui/dist/js/flat-ui.min.js"></script>
 		<script src="js/EventsModel.js"></script>
+		<script>
+
+$(document).ready(function(){
+
+    // Checkboxes and Radio buttons
+    $('[data-toggle="checkbox"]').radiocheck();
+    $('[data-toggle="radio"]').radiocheck();
+    // Switches
+    if ($('[data-toggle="switch"]').length) {
+      $('[data-toggle="switch"]').bootstrapSwitch();
+    }
+
+});
+		</script>
 		<script src="js/main.js"></script>
 
   	</body>

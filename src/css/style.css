@@ -27,6 +27,40 @@ body {
   text-align: center;
   font-weight: bold;
 }
+#controls{
+  position:absolute;
+  top:0px;
+  width:100%;
+  height:50px;
+  padding: 5px 15px;
+  background-color: rgba(0, 0, 0, 0.3);;
+  font-family: 'Comfortaa';
+ transform: scale(1.2);
+}
+#controls label{
+  float:left;
+  width: 90px;
+}
+
+.checkbox #checkRock:checked + .icons .icon-checked{
+  color: #CF3D58;
+}
+.checkbox #checkElectronic:checked + .icons .icon-checked{
+  color: #437BC4;
+}
+.checkbox #checkPop:checked + .icons .icon-checked{
+  color: #A727C3;
+}
+.checkbox #checkFolk:checked + .icons .icon-checked{
+  color: #F0E44B;
+}
+.checkbox #checkHiphop:checked + .icons .icon-checked{
+  color: #6AC75C;
+}
+.checkbox #checkJazz:checked + .icons .icon-checked{
+  color: #E68E3E;
+}
+
 a {
   color: #fff;
 }
