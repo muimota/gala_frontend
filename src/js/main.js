@@ -8,7 +8,8 @@ var layerCloudLocations;// [locationIndex ..] tabla de la geometrya de layer
 var raycaster;
 var mouse = new THREE.Vector2();
 var clock;
-var indicator;
+var indicator
+var persistentIndicator
 var controls;
 var clock;               // a clock
 var lastControlTime      //
@@ -53,7 +54,8 @@ function init() {
 		    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
 		  	pointCloud.position.set( 0,0,0 );
 		  	scene.add( pointCloud );
-		    pointCloud.add(indicator);
+		    pointCloud.add(indicator)
+				pointCloud.add(persistentIndicator)
 				displayConcertsinDate(config.date,config.timeInterval,config.activegenres)
 				animate()
 		  })
@@ -191,6 +193,10 @@ function init() {
   indicator = new THREE.Mesh( geometry, material )
   indicator.visible = false
 
+	persistentIndicator = new THREE.Mesh( geometry, material )
+	persistentIndicator.visible = false
+
+
 
 //
 	raycaster = new THREE.Raycaster();
@@ -305,8 +311,13 @@ function displayLocations(locationsIds,color,size){
 
 }
 function displayConcertsinDate(date,timeInterval,activegenres,callback){
-	$('#addressCountry').html('')
-	$('#addressLocality').html('')
+
+	if(persistentIndicator.visible == false){
+		$('#addressCountry').html('')
+		$('#addressLocality').html('')
+		//showArtists(date,timeInterval,locationId)
+	}
+
 	$('#artists').html('traveling through time...')
   eventModel.getConcerts(date,timeInterval,activegenres,function(concerts){
 
@@ -315,9 +326,12 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
     var sizes       = []
 
 		//clear UI
-		$('#artists').html('')
-		$('#addressCountry').html('')
-		$('#addressLocality').html('')
+		if(persistentIndicator.visible){
+			var locationId = persistentIndicator.userData['locationId']
+			showArtists(date,timeInterval,locationId)
+		}else{
+			$('#artists').html('')
+		}
     for(var locationId in concerts){
         var concert = concerts[locationId];
         var size  = 5;
@@ -381,42 +395,73 @@ function onWorldClick( event ) {
 
 		//clear UI
 		$('#artists').html('searching artists...')
-		$('#addressCountry').html('')
-		$('#addressLocality').html('')
+
 		config.autoplay = false
     var locationId = indicator.userData['locationId'];
+
+		//if persistentIndicator was enabled we want to hide
+		//it if the user click again over it
+
+		if(persistentIndicator.visible == true &&
+			persistentIndicator.userData['locationId'] ==
+			indicator.userData['locationId']){
+
+			persistentIndicator.visible = false
+
+			$('#artists').html('')
+			$('#addressCountry').html('')
+			$('#addressLocality').html('')
+			return
+		}
+
+		persistentIndicator.position.copy(indicator.position)
+		persistentIndicator.userData['locationId'] = indicator.userData['locationId'];
+		persistentIndicator.visible = true
     //config.autorotate = false;
     eventModel.getLocationName(locationId,function(locationInfo){
+
       $('#addressLocality').text(locationInfo[0]);
       $('#addressCountry').text(locationInfo[1]);
+
     })
+		showArtists(config.date,config.timeInterval,locationId)
 
-		eventModel.getArtists(config.date,config.timeInterval,locationId,function(artists){
-
-			var auxArtists    = []
-			for(var i = 0;i<config.activegenres.length;i++){
-				var genre = config.activegenres[i]
-				var genreArtists = artists[genre]
-				for(var j= 0;j<genreArtists.length;j++){
-					var genreArtist = genreArtists[j]
-					if(auxArtists.indexOf(genreArtist) == -1){
-						auxArtists.push(genreArtist)
-					}
-				}
-			}
-
-			artists = auxArtists
-			console.log(artists)
-			if(artists.length > 10){
-				//number of artists that don't fit
-				var uncreditedArtists = '(+' + (artists.length-5) + ')'
-				artists = artists.slice(0,10)
-				artists.push(uncreditedArtists)
-			}
-			$('#artists').html(artists.join(', '))
-		})
   }
 }
+
+//TODO:add active genres
+
+function showArtists(date,timeInterval,locationId){
+
+	eventModel.getArtists(date,timeInterval,locationId,function(artists){
+
+		var auxArtists    = []
+		for(var i = 0;i<config.activegenres.length;i++){
+			var genre = config.activegenres[i]
+			var genreArtists = []
+			if(genre in artists){
+				genreArtists = artists[genre]
+			}
+			for(var j= 0;j<genreArtists.length;j++){
+				var genreArtist = genreArtists[j]
+				if(auxArtists.indexOf(genreArtist) == -1){
+					auxArtists.push(genreArtist)
+				}
+			}
+		}
+
+		artists = auxArtists
+		console.log(artists)
+		if(artists.length > 10){
+			//number of artists that don't fit
+			var uncreditedArtists = '(+' + (artists.length-5) + ')'
+			artists = artists.slice(0,10)
+			artists.push(uncreditedArtists)
+		}
+		$('#artists').html(artists.join(', '))
+	})
+}
+
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
@@ -434,6 +479,7 @@ function render() {
 
     var intersection = raycaster.intersectObject( layerCloud );
 
+		//show indicator over the closest city to the mouse
     if(intersection.length>0){
 
       var index = 0;
