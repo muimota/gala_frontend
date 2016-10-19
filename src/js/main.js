@@ -415,10 +415,10 @@ function onWorldClick( event ) {
 
 			artists = auxArtists
 			console.log(artists)
-			if(artists.length > 5){
+			if(artists.length > 10){
 				//number of artists that don't fit
 				var uncreditedArtists = '(+' + (artists.length-5) + ')'
-				artists = artists.slice(0,5)
+				artists = artists.slice(0,10)
 				artists.push(uncreditedArtists)
 			}
 			$('#artists').html(artists.join(', '))
@@ -468,7 +468,7 @@ function render() {
 
   controls.update()
   if(config.autorotate){
-		if((clock.getElapsedTime() - lastControlTime) > 2.0 ){
+		if((clock.getElapsedTime() - lastControlTime) > 1.0 ){
 			angularSpeed = Math.min(0.0005,angularSpeed + 0.00001)
 		}else{
 			angularSpeed = Math.max(0.0000,angularSpeed - 0.00001)

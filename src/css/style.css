@@ -8,12 +8,18 @@ body {
 }
 #info {
   position: absolute;
+  pointer-events:none;
   bottom: 0px;
-  width: 100%;
-  padding: 5px;
+  width: 350px;
+  margin-left: 20px;
   font-size: 13px;
-  text-align: center;
+  text-align: left;
   font-weight: bold;
+  color:#EEE;
+}
+#artists{
+  color:#AAA;
+  height:60px;
 }
 #controls{
   position:absolute;
@@ -47,6 +53,9 @@ body {
   color: #E68E3E;
 }
 
+#btnDate{
+  width:85px;
+}
 a {
   color: #fff;
 }

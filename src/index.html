@@ -45,61 +45,67 @@
 	        <input type="radio" data-toggle="radio" name="genre" value="rock" id="checkRock" checked="">
 	        rock
 	      </label>
-				<label class="radio" for="checkElectronic">
-					<input type="radio" data-toggle="radio" name="genre" value="electronic" id="checkElectronic" required>
-					electro
-				</label>
 				<label class="radio" for="checkPop">
 					<input type="radio" data-toggle="radio" name="genre" value="pop" id="checkPop" required>
 					pop
 				</label>
-				<label class="radio" for="checkFolk">
-					<input type="radio" data-toggle="radio" name="genre" value="folk" id="checkFolk" >
-					folk
+				<label class="radio" for="checkElectronic">
+					<input type="radio" data-toggle="radio" name="genre" value="electronic" id="checkElectronic" required>
+					electro
 				</label>
 				<label class="radio" for="checkHiphop">
 					<input type="radio" data-toggle="radio" name="genre" value="hip hop" id="checkHiphop" required>
 					hiphop
 				</label>
+				<label class="radio" for="checkFolk">
+					<input type="radio" data-toggle="radio" name="genre" value="folk" id="checkFolk" >
+					folk
+				</label>
+
 				<label class="radio" for="checkJazz">
 					<input type="radio" data-toggle="radio" name="genre" value="jazz" id="checkJazz" required>
 					jazz
 				</label>
-				<div class="btn-group">
-          <button class="btn btn-inverse btn-sm" type="button">
+				<div id="dateSelector" class="btn-group pull-right">
+          <button class="btn btn-inverse btn-sm prevDate" type="button">
 						<i class="fui-arrow-left"></i>
 					</button>
-          <button type="button" class="btn btn-inverse btn-sm ">
-            May </span>
-          </button>
 
-          <button data-toggle="dropdown" type="button" class="btn btn-inverse btn-sm ">
-            2006 </span>
+          <button id="btnDate" data-toggle="dropdown" type="button" class="btn btn-inverse btn-sm ">
+            MAY 2006 </span>
           </button>
-          <ul role="menu" class="dropdown-menu">
+          <ul id="ulYear" role="menu" class="dropdown-menu">
             <li><a href="">2006</a></li>
 						<li><a href="">2007</a></li>
 						<li><a href="">2008</a></li>
 						<li><a href="">2009</a></li>
+						<li><a href="">2010</a></li>
+						<li><a href="">2011</a></li>
+						<li><a href="">2012</a></li>
+						<li><a href="">2013</a></li>
+						<li><a href="">2014</a></li>
+						<li><a href="">2015</a></li>
+						<li><a href="">2016</a></li>
 
 
           </ul>
-          <button class="btn btn-inverse btn-sm" type="button">
+          <button class="btn btn-inverse btn-sm nextDate" type="button">
 						<i class="fui-arrow-right"></i>
 					</button>
 
         </div>
+<!--
 				<div class="btn-group">
 					<button class="btn btn-inverse btn-sm" type="button">
 						<i class="fui-play"></i>
 					</button>
 				</div>
-
+-->
 			</div>
 		</div>
 
 		<div id="info">
-			<span id="addressLocality"></span>&nbsp; <span id="addressCountry"></span>
+			<h5 id="addressLocality"></h5><h6 id="addressCountry"></h6>
 			<div id="artists"></div>
 		</div>
 
@@ -124,6 +130,7 @@ $(document).ready(function(){
       $('[data-toggle="switch"]').bootstrapSwitch();
     }
 
+		//radiobuttons genres
 		$('.radioGenres input').change(function(elem){
 
 			var genre = $(this).val()
@@ -131,6 +138,46 @@ $(document).ready(function(){
       offsetTime(0,config.timeInterval);
 
 		})
+
+		//prev and next date
+		$('.prevDate , .nextDate').click(function(event){
+			var elem = $(event.currentTarget)
+			var dateOffset;
+			if(elem.hasClass('nextDate')){
+				console.log('next')
+				dateOffset = 1
+			}else{
+				console.log('prev')
+				dateOffset = -1
+			}
+			offsetTime( dateOffset,config.timeInterval,
+				function(){updateDateUI(config.date)})
+		})
+
+
+
+		function updateDateUI(dateStr){
+			var year = parseInt(dateStr.substring(0,4))
+			var month = parseInt(dateStr.substring(4,6))
+			var monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AGO','SEP','OCT','NOV','DEC']
+			var monthName = monthNames[month -1 ]
+			var btnString = monthName + ' ' + year
+			$('#btnDate').text(btnString)
+		}
+
+		$('#ulYear a').click(function(event){
+			event.preventDefault()
+			var day = config.date.substring(6,8)
+			var month = config.date.substring(4,6)
+			var year  = $(event.currentTarget).text()
+			var dateStr = year+month+day
+			gotoDate(dateStr,function(){updateDateUI(config.date)})
+
+			console.log($(event.currentTarget).text())
+		})
+		//update UI
+		updateDateUI(config.date)
+
 });
 		</script>
 
