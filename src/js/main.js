@@ -468,11 +468,12 @@ function render() {
 
   controls.update()
   if(config.autorotate){
+		/*
 		if((clock.getElapsedTime() - lastControlTime) > 1.0 ){
 			angularSpeed = Math.min(0.0005,angularSpeed + 0.00001)
 		}else{
 			angularSpeed = Math.max(0.0000,angularSpeed - 0.00001)
-		}
+		}*/
 		pointCloud.rotation.z += angularSpeed
   }
   camera.updateMatrixWorld();
