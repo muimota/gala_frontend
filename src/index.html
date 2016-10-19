@@ -38,34 +38,64 @@
 	</head>
 
 	<body>
-		<div id="container" ></div>
-		<div id="controls" >
+		<div id="container"></div>
+			<div id="controls" >
+				<div class="form-group radioGenres">
+				<label class="radio" for="checkRock">
+	        <input type="radio" data-toggle="radio" name="genre" value="rock" id="checkRock" checked="">
+	        rock
+	      </label>
+				<label class="radio" for="checkElectronic">
+					<input type="radio" data-toggle="radio" name="genre" value="electronic" id="checkElectronic" required>
+					electro
+				</label>
+				<label class="radio" for="checkPop">
+					<input type="radio" data-toggle="radio" name="genre" value="pop" id="checkPop" required>
+					pop
+				</label>
+				<label class="radio" for="checkFolk">
+					<input type="radio" data-toggle="radio" name="genre" value="folk" id="checkFolk" >
+					folk
+				</label>
+				<label class="radio" for="checkHiphop">
+					<input type="radio" data-toggle="radio" name="genre" value="hip hop" id="checkHiphop" required>
+					hiphop
+				</label>
+				<label class="radio" for="checkJazz">
+					<input type="radio" data-toggle="radio" name="genre" value="jazz" id="checkJazz" required>
+					jazz
+				</label>
+				<div class="btn-group">
+          <button class="btn btn-inverse btn-sm" type="button">
+						<i class="fui-arrow-left"></i>
+					</button>
+          <button type="button" class="btn btn-inverse btn-sm ">
+            May </span>
+          </button>
 
-			<label class="checkbox" for="checkRock">
-        <input type="checkbox" data-toggle="checkbox" value="" id="checkRock" required>
-        rock
-      </label>
-			<label class="checkbox" for="checkElectronic">
-				<input type="checkbox" data-toggle="checkbox" value="" id="checkElectronic" required>
-				electro
-			</label>
-			<label class="checkbox" for="checkPop">
-				<input type="checkbox" data-toggle="checkbox" value="" id="checkPop" required>
-				pop
-			</label>
-			<label class="checkbox" for="checkFolk">
-				<input type="checkbox" data-toggle="checkbox" value="" id="checkFolk" required>
-				folk
-			</label>
-			<label class="checkbox" for="checkHiphop">
-				<input type="checkbox" data-toggle="checkbox" value="" id="checkHiphop" required>
-				hiphop
-			</label>
-			<label class="checkbox" for="checkJazz">
-				<input type="checkbox" data-toggle="checkbox" value="" id="checkJazz" required>
-				jazz
-			</label>
+          <button data-toggle="dropdown" type="button" class="btn btn-inverse btn-sm ">
+            2006 </span>
+          </button>
+          <ul role="menu" class="dropdown-menu">
+            <li><a href="">2006</a></li>
+						<li><a href="">2007</a></li>
+						<li><a href="">2008</a></li>
+						<li><a href="">2009</a></li>
 
+
+          </ul>
+          <button class="btn btn-inverse btn-sm" type="button">
+						<i class="fui-arrow-right"></i>
+					</button>
+
+        </div>
+				<div class="btn-group">
+					<button class="btn btn-inverse btn-sm" type="button">
+						<i class="fui-play"></i>
+					</button>
+				</div>
+
+			</div>
 		</div>
 
 		<div id="info">
@@ -80,6 +110,8 @@
 		<script src="libs/jquery/dist/jquery.min.js"></script>
 		<script src="libs/flat-ui/dist/js/flat-ui.min.js"></script>
 		<script src="js/EventsModel.js"></script>
+		<script src="js/main.js"></script>
+
 		<script>
 
 $(document).ready(function(){
@@ -92,9 +124,15 @@ $(document).ready(function(){
       $('[data-toggle="switch"]').bootstrapSwitch();
     }
 
+		$('.radioGenres input').change(function(elem){
+
+			var genre = $(this).val()
+			config.activegenres = [genre]
+      offsetTime(0,config.timeInterval);
+
+		})
 });
 		</script>
-		<script src="js/main.js"></script>
 
   	</body>
 

@@ -42,8 +42,7 @@ function init() {
   //load locations
   console.log('loading');
 
-	eventModel.loadTimeline(
-    function(){
+
 			var url = eventModel.rootUrl + 'locations'
 			$.getJSON( url , function( data ) {
 		    console.log('loaded!');
@@ -55,8 +54,8 @@ function init() {
 				displayConcertsinDate(config.date,config.timeInterval,config.activegenres)
 				animate()
 		  })
-    }
-  )
+
+
 
 
   //GUI
@@ -65,8 +64,7 @@ function init() {
     timeInterval:'M',
     autorotate:true,
     autoplay:false,
-    genre1:'rock',
-    genre2:'---',
+    activegenres:['rock'],
 		prev:function(){
 	    offsetTime(-1,config.timeInterval);
 	  },
@@ -74,8 +72,8 @@ function init() {
 	    offsetTime( 1,config.timeInterval);
 	  }
   }
-  config.activegenres=[config.genre1,config.genre2]
 
+	/*
   var gui = new dat.gui.GUI();
   gui.remember(config)
   // Choose from named values
@@ -131,7 +129,7 @@ function init() {
 
 	});
 
-
+*/
   controls = new THREE.OrbitControls(camera,renderer.domElement)
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
@@ -140,16 +138,10 @@ function init() {
   controls.enableKeys        = false;
   controls.enablePan         = false;
   controls.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
-
+}
   function gotoDate(date,callback){
 
-    var i;
-    for(var i=0;i<eventModel.timeline.length;i++){
-      if(date <= eventModel.timeline[i]){
-        break;
-      }
-    }
-    displayConcertsinDate(eventModel.timeline[i],config.timeInterval,config.activegenres,callback);
+    displayConcertsinDate(date,config.timeInterval,config.activegenres,callback);
   }
 
   function offsetTime(timeDirection,timeInterval,callback){
@@ -200,7 +192,7 @@ function init() {
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
   $('#container>canvas').click(onWorldClick);
-}
+
 
 function generateWorld(radius,points){
 
@@ -392,21 +384,19 @@ function onWorldClick( event ) {
 
 		eventModel.getArtists(config.date,config.timeInterval,locationId,function(artists){
 
-			var artistsGenre1 = []
-			var artistsGenre2 = []
+			var auxArtists    = []
+			for(var i = 0;i<config.activegenres.length;i++){
+				var genre = config.activegenres[i]
+				var genreArtists = artists[genre]
+				for(var j= 0;j<genreArtists.length;j++){
+					var genreArtist = genreArtists[j]
+					if(auxArtists.indexOf(genreArtist) == -1){
+						auxArtists.push(genreArtist)
+					}
+				}
+			}
 
-			if(config.genre1 in artists){
-				artistsGenre1 = artists[config.genre1]
-			}
-			if(config.genre2 in artists){
-				artistsGenre2 = artists[config.genre2]
-			}
-			var artists = artistsGenre1.concat(artistsGenre2)
-			//remove duplicates
-			//http://stackoverflow.com/a/9229821/2205297
-			uniqueArray = artists.filter(function(item, pos) {
-    		return artists.indexOf(item) == pos;
-			})
+			artists = auxArtists
 			console.log(artists)
 			if(artists.length > 5){
 				//number of artists that don't fit
@@ -414,7 +404,7 @@ function onWorldClick( event ) {
 				artists = artists.slice(0,5)
 				artists.push(uncreditedArtists)
 			}
-			$('#artists').html(artists.join('<br>'))
+			$('#artists').html(artists.join(', '))
 		})
   }
 }
