@@ -10,6 +10,9 @@ var mouse = new THREE.Vector2();
 var clock;
 var indicator;
 var controls;
+var clock;               // a clock
+var lastControlTime      //
+var angularSpeed
 var palette;
 var config
 var timeoutHandler;
@@ -130,6 +133,9 @@ function init() {
 	});
 
 */
+	clock = new THREE.Clock();
+	lastControlTime = -1000
+	angularSpeed = 0.0005
   controls = new THREE.OrbitControls(camera,renderer.domElement)
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
@@ -138,6 +144,15 @@ function init() {
   controls.enableKeys        = false;
   controls.enablePan         = false;
   controls.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
+
+	/*
+	controls.addEventListener('change',
+		function(event){
+			console.log(event)
+			lastControlTime = clock.getElapsedTime ()
+		}
+	)
+	*/
 }
   function gotoDate(date,callback){
 
@@ -368,8 +383,10 @@ function onDocumentMouseMove( event ) {
 function onWorldClick( event ) {
 
 	event.preventDefault();
+	lastControlTime = clock.getElapsedTime()
 
   if(indicator.visible){
+
 		//clear UI
 		$('#artists').html('searching artists...')
 		$('#addressCountry').html('')
@@ -448,9 +465,15 @@ function render() {
     }
 
   }
-  controls.update();
+
+  controls.update()
   if(config.autorotate){
-    pointCloud.rotation.z += .0005;
+		if((clock.getElapsedTime() - lastControlTime) > 2.0 ){
+			angularSpeed = Math.min(0.0005,angularSpeed + 0.00001)
+		}else{
+			angularSpeed = Math.max(0.0000,angularSpeed - 0.00001)
+		}
+		pointCloud.rotation.z += angularSpeed
   }
   camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
