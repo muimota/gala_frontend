@@ -63,7 +63,7 @@ function init() {
 
   //GUI
   config = {
-    date:'20100101',
+    date:'20160601',
     timeInterval:'M',
     autorotate:true,
     autoplay:false,
@@ -145,14 +145,6 @@ function init() {
   controls.enablePan         = false;
   controls.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
 
-	/*
-	controls.addEventListener('change',
-		function(event){
-			console.log(event)
-			lastControlTime = clock.getElapsedTime ()
-		}
-	)
-	*/
 }
   function gotoDate(date,callback){
 
@@ -467,16 +459,14 @@ function render() {
   }
 
   controls.update()
-  if(config.autorotate){
-		/*
-		if((clock.getElapsedTime() - lastControlTime) > 1.0 ){
-			angularSpeed = Math.min(0.0005,angularSpeed + 0.00001)
-		}else{
-			angularSpeed = Math.max(0.0000,angularSpeed - 0.00001)
-		}*/
+
+	if(config.autorotate){
+
 		pointCloud.rotation.z += angularSpeed
-  }
-  camera.updateMatrixWorld();
+
+	}
+
+	camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );
 	renderer.render( scene, camera );
 }
