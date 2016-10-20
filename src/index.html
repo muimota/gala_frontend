@@ -66,41 +66,40 @@
 					<input type="radio" data-toggle="radio" name="genre" value="jazz" id="checkJazz" required>
 					jazz
 				</label>
-				<div id="dateSelector" class="btn-group pull-right">
-          <button class="btn btn-inverse btn-sm prevDate" type="button">
-						<i class="fui-arrow-left"></i>
-					</button>
+				<div class="mlb pull-right">
+					<div id="dateSelector" class="btn-group pull-right">
+	          <button class="btn btn-inverse btn-sm prevDate" type="button">
+							<i class="fui-arrow-left"></i>
+						</button>
 
-          <button id="btnDate" data-toggle="dropdown" type="button" class="btn btn-inverse btn-sm ">
-            MAY 2006 </span>
-          </button>
-          <ul id="ulYear" role="menu" class="dropdown-menu">
-            <li><a href="">2006</a></li>
-						<li><a href="">2007</a></li>
-						<li><a href="">2008</a></li>
-						<li><a href="">2009</a></li>
-						<li><a href="">2010</a></li>
-						<li><a href="">2011</a></li>
-						<li><a href="">2012</a></li>
-						<li><a href="">2013</a></li>
-						<li><a href="">2014</a></li>
-						<li><a href="">2015</a></li>
-						<li><a href="">2016</a></li>
+	          <button id="btnDate" data-toggle="dropdown" type="button" class="btn btn-inverse btn-sm "></button>
+	          <ul id="ulYear" role="menu" class="dropdown-menu">
+	            <li><a href="">2006</a></li>
+							<li><a href="">2007</a></li>
+							<li><a href="">2008</a></li>
+							<li><a href="">2009</a></li>
+							<li><a href="">2010</a></li>
+							<li><a href="">2011</a></li>
+							<li><a href="">2012</a></li>
+							<li><a href="">2013</a></li>
+							<li><a href="">2014</a></li>
+							<li><a href="">2015</a></li>
+							<li><a href="">2016</a></li>
 
 
-          </ul>
-          <button class="btn btn-inverse btn-sm nextDate" type="button">
-						<i class="fui-arrow-right"></i>
-					</button>
+	          </ul>
+	          <button class="btn btn-inverse btn-sm nextDate" type="button">
+							<i class="fui-arrow-right"></i>
+						</button>
 
-        </div>
-<!--
-				<div class="btn-group">
-					<button class="btn btn-inverse btn-sm" type="button">
+	        </div>
+
+
+					<button id="btnPlay" class="btn btn-inverse btn-sm" type="button">
 						<i class="fui-play"></i>
 					</button>
+
 				</div>
--->
 			</div>
 		</div>
 
@@ -143,6 +142,9 @@ $(document).ready(function(){
 		$('.prevDate , .nextDate').click(function(event){
 			var elem = $(event.currentTarget)
 			var dateOffset;
+			//stop animation
+			playTime(false)
+
 			if(elem.hasClass('nextDate')){
 				console.log('next')
 				dateOffset = 1
@@ -167,6 +169,7 @@ $(document).ready(function(){
 
 		$('#ulYear a').click(function(event){
 			event.preventDefault()
+			playTime(false)
 			var day = config.date.substring(6,8)
 			var month = config.date.substring(4,6)
 			var year  = $(event.currentTarget).text()
@@ -175,6 +178,54 @@ $(document).ready(function(){
 
 			console.log($(event.currentTarget).text())
 		})
+
+		//play button
+		$('#btnPlay').data('play',false)
+		$('#btnPlay').click(function(){
+			var playing = !$('#btnPlay').data('play')
+			playTime(playing)
+		})
+
+		function playTime(playing){
+
+			$('#btnPlay').data('play',playing)
+			$('#btnPlay').children('i').removeClass()
+
+			//Update UI, play or pause in the button
+			if(playing){
+				$('#btnPlay').children('i').addClass('fui-pause')
+			}else{
+				$('#btnPlay').children('i').addClass('fui-play')
+			}
+
+			//start/stopping playing
+			if(playing){
+
+				//@TODO:move to another function
+
+				function nextStep(){
+					var timeStep = 1
+					if(config.date.substring(0,6) == '201610'){
+						config.date = '20060101'
+						timeStep = 0
+					}
+					offsetTime( timeStep,config.timeInterval,
+						function(){
+							updateDateUI(config.date)
+							timeoutHandler = setTimeout(nextStep,2000);
+
+						}
+					)
+				}
+
+				nextStep()
+			}else{
+				clearTimeout(timeoutHandler)
+			}
+		}
+
+		
+
 		//update UI
 		updateDateUI(config.date)
 

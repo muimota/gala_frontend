@@ -60,9 +60,6 @@ function init() {
 				animate()
 		  })
 
-
-
-
   //GUI
   config = {
     date:'20160601',
@@ -78,63 +75,6 @@ function init() {
 	  }
   }
 
-	/*
-  var gui = new dat.gui.GUI();
-  gui.remember(config)
-  // Choose from named values
-
-  gui.add(config, 'date').onFinishChange(function(date){
-    gotoDate(date);
-  }).listen();
-	//controle buttons
-	gui.add(config, 'next')
-	gui.add(config, 'prev')
-
-  gui.add(config, 'timeInterval',{'day':'D','week':'W','month':'M','6month':'H','year':'Y'})
-  .onFinishChange(function(){offsetTime(0,config.timeInterval);})
-  gui.add(config, 'autorotate');
-  var playController = gui.add(config, 'autoplay').listen();
-
-  //compare genres
-  genresFolder = gui.addFolder('genres')
-  genresFolder.add(config,
-    'genre1',
-    ['---','electronic','pop','folk','rock','jazz','hip hop'])
-    .onFinishChange(function(){
-      config.activegenres = [config.genre1,config.genre2]
-      offsetTime(0,config.timeInterval);
-    });
-    genresFolder.add(config,
-      'genre2',
-      ['---','electronic','pop','folk','rock','jazz','hip hop'])
-      .onFinishChange(function(){
-        config.activegenres = [config.genre1,config.genre2]
-        offsetTime(0,config.timeInterval);
-      });
-	genresFolder.open()
-	//autoplay
-  playController.onFinishChange(function(value) {
-
-		if(value == true){
-
-			//@TODO:move to another function
-
-			function nextStep(){
-				offsetTime( 1,config.timeInterval,
-					function(){
-						timeoutHandler = setTimeout(nextStep,2000);
-					}
-				)
-			}
-
-			nextStep()
-		}else{
-			clearTimeout(timeoutHandler)
-		}
-
-	});
-
-*/
 	clock = new THREE.Clock();
 	lastControlTime = -1000
 	angularSpeed = 0.0005
@@ -146,6 +86,8 @@ function init() {
   controls.enableKeys        = false;
   controls.enablePan         = false;
   controls.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
+
+
 
 }
   function gotoDate(date,callback){
