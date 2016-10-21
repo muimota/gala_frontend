@@ -37,7 +37,7 @@ function init() {
 
   camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
   camera.up = new THREE.Vector3(0,0,1);
-  camera.position.set(200,0,100)
+  camera.position.set(100,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
 	//eventModel = new EventsModel('http://gala.muimota.net/gala/')
@@ -254,13 +254,8 @@ function displayLocations(locationsIds,color,size){
 }
 function displayConcertsinDate(date,timeInterval,activegenres,callback){
 
-	if(persistentIndicator.visible == false){
-		$('#addressCountry').html('')
-		$('#addressLocality').html('')
-		//showArtists(date,timeInterval,locationId)
-	}
 
-	$('#artists').html('traveling through time...')
+
   eventModel.getConcerts(date,timeInterval,activegenres,function(concerts){
 
     var locationIds = []
@@ -271,8 +266,6 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
 		if(persistentIndicator.visible){
 			var locationId = persistentIndicator.userData['locationId']
 			showArtists(date,timeInterval,locationId)
-		}else{
-			$('#artists').html('')
 		}
     for(var locationId in concerts){
         var concert = concerts[locationId];
@@ -335,9 +328,6 @@ function onWorldClick( event ) {
 
   if(indicator.visible){
 
-		//clear UI
-		$('#artists').html('searching artists...')
-
 		config.autoplay = false
     var locationId = indicator.userData['locationId'];
 
@@ -347,12 +337,10 @@ function onWorldClick( event ) {
 		if(persistentIndicator.visible == true &&
 			persistentIndicator.userData['locationId'] ==
 			indicator.userData['locationId']){
-
 			persistentIndicator.visible = false
-
-			$('#artists').html('')
-			$('#addressCountry').html('')
-			$('#addressLocality').html('')
+			$('#addressLocality').fadeOut()
+			$('#addressCountry').fadeOut()
+			$('#artists').fadeOut()
 			return
 		}
 
@@ -362,8 +350,14 @@ function onWorldClick( event ) {
     //config.autorotate = false;
     eventModel.getLocationName(locationId,function(locationInfo){
 
-      $('#addressLocality').text(locationInfo[0]);
-      $('#addressCountry').text(locationInfo[1]);
+      $('#addressLocality').fadeOut(
+				function(){
+					$(this).text(locationInfo[0]).fadeIn()
+				})
+      $('#addressCountry').fadeOut(
+				function(){
+					$(this).text(locationInfo[1]).fadeIn()
+				})
 
     })
 		showArtists(config.date,config.timeInterval,locationId)
@@ -400,7 +394,11 @@ function showArtists(date,timeInterval,locationId){
 			artists = artists.slice(0,10)
 			artists.push(uncreditedArtists)
 		}
-		$('#artists').html(artists.join(', '))
+		$('#artists').fadeOut(
+			function(){
+				$(this).text(artists.join(', ')).fadeIn()
+			})
+
 	})
 }
 
