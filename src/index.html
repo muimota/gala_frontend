@@ -42,28 +42,28 @@
 			<div id="controls" >
 				<div class="form-group radioGenres">
 				<label class="radio" for="checkRock">
-	        <input type="radio" data-toggle="radio" name="genre" value="rock" id="checkRock" checked="">
+	        <input type="checkbox" data-toggle="radio" name="genre" value="rock" id="checkRock" checked="">
 	        rock
 	      </label>
 				<label class="radio" for="checkPop">
-					<input type="radio" data-toggle="radio" name="genre" value="pop" id="checkPop" required>
+					<input type="checkbox" data-toggle="radio" name="genre" value="pop" id="checkPop" required>
 					pop
 				</label>
 				<label class="radio" for="checkElectronic">
-					<input type="radio" data-toggle="radio" name="genre" value="electronic" id="checkElectronic" required>
+					<input type="checkbox" data-toggle="radio" name="genre" value="electronic" id="checkElectronic" required>
 					electro
 				</label>
 				<label class="radio" for="checkHiphop">
-					<input type="radio" data-toggle="radio" name="genre" value="hip hop" id="checkHiphop" required>
+					<input type="checkbox" data-toggle="radio" name="genre" value="hip hop" id="checkHiphop" required>
 					hiphop
 				</label>
 				<label class="radio" for="checkFolk">
-					<input type="radio" data-toggle="radio" name="genre" value="folk" id="checkFolk" >
+					<input type="checkbox" data-toggle="radio" name="genre" value="folk" id="checkFolk" >
 					folk
 				</label>
 
 				<label class="radio" for="checkJazz">
-					<input type="radio" data-toggle="radio" name="genre" value="jazz" id="checkJazz" required>
+					<input type="checkbox" data-toggle="radio" name="genre" value="jazz" id="checkJazz" required>
 					jazz
 				</label>
 				<div class="mlb pull-right">
@@ -133,7 +133,11 @@ $(document).ready(function(){
 		$('.radioGenres input').change(function(elem){
 
 			var genre = $(this).val()
-			config.activegenres = [genre]
+			if($(this).is(':checked')){
+				config.activegenres.push(genre)
+			}else{
+				config.activegenres.splice(config.activegenres.indexOf(genre),1)
+			}
       offsetTime(0,config.timeInterval);
 
 		})
