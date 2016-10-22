@@ -42,7 +42,7 @@
 			<div id="controls" >
 				<div class="form-group radioGenres">
 				<label class="radio" for="checkRock">
-	        <input type="checkbox" data-toggle="radio" name="genre" value="rock" id="checkRock" checked="">
+	        <input type="checkbox" data-toggle="radio" name="genre" value="rock" id="checkRock" required>
 	        rock
 	      </label>
 				<label class="radio" for="checkPop">
@@ -134,9 +134,16 @@ $(document).ready(function(){
 
 			var genre = $(this).val()
 			if($(this).is(':checked')){
+
 				config.activegenres.push(genre)
+				//if there are already 2 genres, disable unchecked radios so user can pick more
+				if(config.activegenres.length >= 2 ){
+						$(".radioGenres input:checkbox:not(:checked)").radiocheck('disable')
+				}
+
 			}else{
 				config.activegenres.splice(config.activegenres.indexOf(genre),1)
+				$(".radioGenres input:checkbox:not(:checked)").radiocheck('enable')
 			}
       offsetTime(0,config.timeInterval);
 

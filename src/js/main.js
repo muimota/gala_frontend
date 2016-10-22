@@ -66,7 +66,7 @@ function init() {
     timeInterval:'M',
     autorotate:true,
     autoplay:false,
-    activegenres:['rock'],
+    activegenres:[],
 		prev:function(){
 	    offsetTime(-1,config.timeInterval);
 	  },
