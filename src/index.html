@@ -139,11 +139,13 @@ $(document).ready(function(){
 				//if there are already 2 genres, disable unchecked radios so user can pick more
 				if(config.activegenres.length >= 2 ){
 						$(".radioGenres input:checkbox:not(:checked)").radiocheck('disable')
+						$(".radioGenres input:checkbox:not(:checked)").parent().addClass('genredisabled')
 				}
 
 			}else{
 				config.activegenres.splice(config.activegenres.indexOf(genre),1)
 				$(".radioGenres input:checkbox:not(:checked)").radiocheck('enable')
+				$(".radioGenres input:checkbox:not(:checked)").parent().removeClass('genredisabled')
 			}
       offsetTime(0,config.timeInterval);
 

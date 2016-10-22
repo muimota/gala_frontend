@@ -38,6 +38,13 @@ body {
   margin:0px 10px;
   background-color: #37485C;
 }
+label.genredisabled.radio{
+  color:#666;
+}
+
+.radio input[type="checkbox"].custom-checkbox:disabled + .icons{
+ color:#666;
+}
 
 .radio #checkRock:checked + .icons .icon-checked{
   color: #CF3D58;
