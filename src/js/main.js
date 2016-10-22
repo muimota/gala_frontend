@@ -40,6 +40,7 @@ function init() {
   camera.position.set(100,0,100)
   camera.lookAt(new THREE.Vector3(0,0,0));
 
+	particleTexture = new THREE.TextureLoader().load('img/particleTexture.png');
 	//eventModel = new EventsModel('http://gala.muimota.net/gala/')
 	eventModel = new EventsModel('/gala/')
 
@@ -205,7 +206,7 @@ function generatePointcloud(radius,points,size,color,opacity) {
   uniforms = {
    color:     { value: new THREE.Color( 0xffffff ) },
    opacity:   { value: opacity},
-   texture:   { value: THREE.ImageUtils.loadTexture( 'img/particleTexture.png' )}
+   texture:   { value: particleTexture}
 	};
 
 	var shaderMaterial = new THREE.ShaderMaterial( {
