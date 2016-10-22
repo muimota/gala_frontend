@@ -13,7 +13,7 @@ var persistentIndicator
 var controls;
 var clock;               // a clock
 var lastControlTime      //
-var angularSpeed
+var angularSpeed,maxAngularSpeed
 var palette;
 var config
 var timeoutHandler;
@@ -49,13 +49,14 @@ function init() {
 
 			var url = eventModel.rootUrl + 'locations'
 			$.getJSON( url , function( data ) {
-		    console.log('loaded!');
 		    locations = data;
 		    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
 		  	pointCloud.position.set( 0,0,0 );
 		  	scene.add( pointCloud );
 		    pointCloud.add(indicator)
 				pointCloud.add(persistentIndicator)
+				//@TODO:mal hace que depende
+				$('.cover').fadeOut()
 				displayConcertsinDate(config.date,config.timeInterval,config.activegenres)
 				animate()
 		  })
@@ -64,9 +65,9 @@ function init() {
   config = {
     date:'20160601',
     timeInterval:'M',
-    autorotate:true,
+    autorotate:false,
     autoplay:false,
-    activegenres:[],
+    activegenres:['rock'],
 		prev:function(){
 	    offsetTime(-1,config.timeInterval);
 	  },
@@ -77,7 +78,8 @@ function init() {
 
 	clock = new THREE.Clock();
 	lastControlTime = -1000
-	angularSpeed = 0.0005
+	angularSpeed = 0
+	maxAngularSpeed = 0.0008
   controls = new THREE.OrbitControls(camera,renderer.domElement)
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
@@ -90,24 +92,22 @@ function init() {
 
 
 }
-  function gotoDate(date,callback){
 
-    displayConcertsinDate(date,config.timeInterval,config.activegenres,callback);
-  }
-
-  function offsetTime(timeDirection,timeInterval,callback){
+//offset time certain magnitude of a timemagnited
+//E.g timeMagnitude = 5 , timeInterva = EventsModel.weekInterval = 5Weeks in future
+  function offsetTime(timeMagnitude,timeInterval,callback){
 
 
 		var date = EventsModel.parseDate(config.date)
 
 		if(timeInterval == EventsModel.weekInterval){
-			date.setDate(date.getDate()+7*timeDirection)
+			date.setDate(date.getDate()+7*timeMagnitude)
 		}else if(timeInterval == EventsModel.monthInterval){
-			date.setMonth(date.getMonth()+1*timeDirection)
+			date.setMonth(date.getMonth()+1*timeMagnitude)
 		}else if(timeInterval == EventsModel.halfYearInterval){
-			date.setMonth(date.getMonth()+6*timeDirection)
+			date.setMonth(date.getMonth()+6*timeMagnitude)
 		}else{
-			date.setDate(date.getDate()+timeDirection)
+			date.setDate(date.getDate()+timeMagnitude)
 		}
 
 		var dateStr = ''+date.getFullYear()+('0'+(date.getMonth()+1)).slice(-2)+
@@ -130,7 +130,7 @@ function init() {
 
 	//indicator
   var geometry = new THREE.SphereBufferGeometry( 0.5, 10, 10 );
-  var material = new THREE.MeshBasicMaterial( {color: 0xffffff,opactiy:0.1,
+  var material = new THREE.MeshBasicMaterial( {color: 0xffffff,
     depthTest: false,transparent:true} );
   indicator = new THREE.Mesh( geometry, material )
   indicator.visible = false
@@ -148,6 +148,8 @@ function init() {
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
   $('#container>canvas').click(onWorldClick);
 
+
+//project latitude longitude into a sphere
 
 function generateWorld(radius,points){
 
@@ -224,6 +226,7 @@ function generatePointcloud(radius,points,size,color,opacity) {
 
 
 //updates locations in map
+//performs the transition between the two datapoints
 function displayLocations(locationsIds,color,size){
 	//fade out previus layerCloud
 	if(layerCloud != undefined){
@@ -365,7 +368,7 @@ function onWorldClick( event ) {
   }
 }
 
-//TODO:add active genres
+
 
 function showArtists(date,timeInterval,locationId){
 
@@ -447,10 +450,14 @@ function render() {
   controls.update()
 
 	if(config.autorotate){
-
-		pointCloud.rotation.z += angularSpeed
-
+		if(angularSpeed < maxAngularSpeed)
+			angularSpeed = Math.min(angularSpeed + 0.000005,maxAngularSpeed)
+	}else{
+		angularSpeed = Math.max(angularSpeed - 0.000005,0)
 	}
+
+	pointCloud.rotation.z += angularSpeed
+
 
 	camera.updateMatrixWorld();
 	raycaster.setFromCamera( mouse, camera );

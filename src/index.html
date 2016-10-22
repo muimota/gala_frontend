@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>GALA a worldwide music visualization </title>
+		<title>GALA, a world music visualization </title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 
@@ -42,7 +42,7 @@
 			<div id="controls" >
 				<div class="form-group radioGenres">
 				<label class="radio" for="checkRock">
-	        <input type="checkbox" data-toggle="radio" name="genre" value="rock" id="checkRock" required>
+	        <input type="checkbox" data-toggle="radio" name="genre" value="rock" id="checkRock" checked required>
 	        rock
 	      </label>
 				<label class="radio" for="checkPop">
@@ -107,7 +107,30 @@
 			<h5 id="addressLocality"></h5><h6 id="addressCountry"></h6>
 			<div id="artists"></div>
 		</div>
+		<div class="cover">
+			<div class="loading">
+				<img src="img/gala_logo.png" width="200px">
+				<div class="spinner">
+				  <div class="dot1"></div>
+				  <div class="dot2"></div>
+				</div>
+			</div>
+			<div class="about popup">
+				<img src="img/gala_logo.png" width="100px" style="display:block;margin: 0 auto 20px auto;">
+				<p>Entendiendo los conciertos, como un indicador de actividad cultural,
+					se pretende mostrar toda la actividad a nivel mundial como si un
+					planetario se tratara.</p>
 
+				<p>Este proyecto fue en parte desarrollado en
+					el taller visualizar 2016 en Madialab Prado con la inestimable
+					ayuda de Victor, Antonio y Marta</p>
+				<p>GALA es un experimento</p>
+				<p class='pull-right'>22 Octubre 2016  Ögaki</p>
+			</div>
+		</div>
+		<a href="#" id="aboutlink">
+			<small> About <i class="fui-info-circle"></i></small>
+		</a>
 		<script src="libs/dat.gui/build/dat.gui.js"></script>
 		<script src="libs/tween.js/src/Tween.js"></script>
 		<script src="libs/three.js/build/three.min.js"></script>
@@ -187,7 +210,8 @@ $(document).ready(function(){
 			var month = config.date.substring(4,6)
 			var year  = $(event.currentTarget).text()
 			var dateStr = year+month+day
-			gotoDate(dateStr,function(){updateDateUI(config.date)})
+			displayConcertsinDate(dateStr,config.timeInterval,
+				config.activegenres,function(){updateDateUI(config.date)})
 
 			console.log($(event.currentTarget).text())
 		})
@@ -211,8 +235,12 @@ $(document).ready(function(){
 				$('#btnPlay').children('i').addClass('fui-play')
 			}
 
+			//rotating
+			config.autorotate = playing
+
 			//start/stopping playing
 			if(playing){
+
 
 				//@TODO:move to another function
 
@@ -238,7 +266,14 @@ $(document).ready(function(){
 		}
 
 
-
+		$('.cover').click(function(){
+			$('.cover').fadeOut()
+		})
+		$('#aboutlink').click(function(){
+			$('.loading').hide()
+			$('.about').show()
+			$('.cover').fadeIn()
+		})
 		//update UI
 		updateDateUI(config.date)
 
