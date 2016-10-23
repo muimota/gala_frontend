@@ -83,10 +83,10 @@ label.genredisabled.radio{
   top:15%;
   width:50%;
   height:300px;
-  font-size: 8px;
   font-weight: lighter;
   text-align: justify;
 }
+
 .about{
   display: none;
 }
@@ -165,4 +165,17 @@ http://tobiasahlin.com/spinkit/
     transform: scale(1.0);
     -webkit-transform: scale(1.0);
   }
+}
+
+
+@media (max-width:600px){
+  .popup{
+    left: 5%;
+    top:5%;
+    width:90%;
+  }
+  .popup P {
+      font-size: 15px
+    }
+
 }
