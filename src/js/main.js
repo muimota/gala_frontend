@@ -84,8 +84,13 @@ function init() {
   controls = new THREE.OrbitControls(camera,renderer.domElement)
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
+
+	controls.minDistance 	= 60;
+	controls.maxDistance 	= 300;
+	controls.zoomSpeed 				= 0.1;
   controls.enableZoom    = true;
 
+	controls.rotateSpeed = .1
   controls.enableKeys        = false;
   controls.enablePan         = false;
   controls.mouseButtons = { ORBIT: THREE.MOUSE.LEFT, ZOOM: THREE.MOUSE.MIDDLE};
@@ -147,7 +152,7 @@ function init() {
 
 	window.addEventListener( 'resize', onWindowResize, false );
 	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-  $('#container>canvas').click(onWorldClick);
+  $('#container>canvas').bind('touchstart click',onWorldClick);
 
 
 //project latitude longitude into a sphere
@@ -328,6 +333,7 @@ function onDocumentMouseMove( event ) {
 function onWorldClick( event ) {
 
 	event.preventDefault();
+	raycasterUpdate();
 	lastControlTime = clock.getElapsedTime()
 
   if(indicator.visible){
@@ -415,39 +421,45 @@ function animate() {
 	requestAnimationFrame( animate );
 	render();
 }
+
+function raycasterUpdate(){
+
+	if(layerCloud != undefined){
+
+		var intersection = raycaster.intersectObject( layerCloud );
+
+		//show indicator over the closest city to the mouse
+		if(intersection.length>0){
+
+			var index = 0;
+			var minDistance = 9999999;
+
+			for(i=0;i < intersection.length; i ++){
+				var distanceToRay = intersection[i].distanceToRay;
+				if(distanceToRay<minDistance){
+						index = intersection[i].index;
+						minDistance = distanceToRay;
+				}
+			}
+
+			var locationId = layerCloudLocations[index];
+			var pointArray    = layerCloud.geometry.getAttribute( 'position' ).array;
+			indicator.position.set(pointArray[index*3],pointArray[index*3+1],pointArray[index*3+2])
+			indicator.visible = true;
+			indicator.userData['locationId'] = locationId
+		}else{
+			indicator.visible = false;
+		}
+
+	}
+
+}
+
 function render() {
 
   TWEEN.update();
 
-  if(layerCloud != undefined){
-
-    var intersection = raycaster.intersectObject( layerCloud );
-
-		//show indicator over the closest city to the mouse
-    if(intersection.length>0){
-
-      var index = 0;
-      var minDistance = 9999999;
-
-      for(i=0;i < intersection.length; i ++){
-        var distanceToRay = intersection[i].distanceToRay;
-        if(distanceToRay<minDistance){
-            index = intersection[i].index;
-            minDistance = distanceToRay;
-        }
-      }
-
-      var locationId = layerCloudLocations[index];
-      var pointArray    = layerCloud.geometry.getAttribute( 'position' ).array;
-      indicator.position.set(pointArray[index*3],pointArray[index*3+1],pointArray[index*3+2])
-      indicator.visible = true;
-      indicator.userData['locationId'] = locationId
-    }else{
-      indicator.visible = false;
-    }
-
-  }
-
+  raycasterUpdate()
   controls.update()
 
 	if(config.autorotate){
