@@ -58,6 +58,11 @@ function init() {
 				pointCloud.add(persistentIndicator)
 				//@TODO:mal hace que depende
 				$('.cover').fadeOut()
+				//add the handler just when the data is loaded
+				$('.cover').click(function(){
+					$('.cover').fadeOut()
+				})
+
 				displayConcertsinDate(config.date,config.timeInterval,config.activegenres)
 				animate()
 		  })
@@ -85,9 +90,9 @@ function init() {
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
 
-	controls.minDistance 	= 60;
+	controls.minDistance 	= 80;
 	controls.maxDistance 	= 300;
-	controls.zoomSpeed 				= 0.1;
+	controls.zoomSpeed 				= 0.75;
   controls.enableZoom    = true;
 
 	controls.rotateSpeed = .1
@@ -136,12 +141,14 @@ function init() {
 
 	//indicator
   var geometry = new THREE.SphereBufferGeometry( 0.5, 10, 10 );
-  var material = new THREE.MeshBasicMaterial( {color: 0xffffff,
-    depthTest: false,transparent:true} );
-  indicator = new THREE.Mesh( geometry, material )
+
+  indicator = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( {color: 0xffffff,
+    depthTest: false,transparent:true,opacity: 0.5}))
+	indicator.scale.set(.5,.5,.5)
   indicator.visible = false
 
-	persistentIndicator = new THREE.Mesh( geometry, material )
+	persistentIndicator = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( {color: 0xffffff,
+    depthTest: false,transparent:true,opacity: 1.0}))
 	persistentIndicator.visible = false
 
 
