@@ -269,7 +269,8 @@ $(document).ready(function(){
 
 
 
-		$('#aboutlink').click(function(){
+		$('#aboutlink').click(function(event){
+			event.preventDefault()
 			$('.loading').hide()
 			$('.about').show()
 			$('.cover').fadeIn()
