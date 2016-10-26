@@ -11,6 +11,7 @@ var clock;
 var indicator
 var persistentIndicator
 var controls;
+var dragDetected
 var clock;               // a clock
 var lastControlTime      //
 var angularSpeed,maxAngularSpeed
@@ -49,6 +50,7 @@ function init() {
 
 
 			var url = eventModel.rootUrl + 'locations'
+
 			$.getJSON( url , function( data ) {
 		    locations = data;
 		    pointCloud = generatePointcloud(50,locations,2.0,new THREE.Color(255,255,255),0.2)
@@ -57,12 +59,13 @@ function init() {
 		    pointCloud.add(indicator)
 				pointCloud.add(persistentIndicator)
 				//@TODO:mal hace que depende
-				$('.cover').fadeOut()
-				//add the handler just when the data is loaded
-				$('.cover').click(function(){
+				setTimeout(function(){
 					$('.cover').fadeOut()
-				})
-
+					//add the handler just when the data is loaded
+					$('.cover').click(function(){
+						$('.cover').fadeOut()
+					})
+				},2000)
 				displayConcertsinDate(config.date,config.timeInterval,config.activegenres)
 				animate()
 		  })
@@ -85,7 +88,7 @@ function init() {
 	clock = new THREE.Clock();
 	lastControlTime = -1000
 	angularSpeed = 0
-	maxAngularSpeed = 0.0008
+	maxAngularSpeed = 0.0004
   controls = new THREE.OrbitControls(camera,renderer.domElement)
   controls.enableDamping = true;
 	controls.dampingFactor = 0.25;
@@ -158,8 +161,16 @@ function init() {
 	raycaster.params.Points.threshold = 2.0;
 
 	window.addEventListener( 'resize', onWindowResize, false );
-	document.addEventListener( 'mousemove', onDocumentMouseMove, false );
-  $('#container>canvas').bind('touchstart click',onWorldClick);
+
+	document.addEventListener( 'mousemove', function(event){
+		onDocumentMouseMove(event)
+		raycasterUpdate()
+	}, false );
+
+	dragDetected = false
+	$('#container>canvas').bind('mousedown',function(){dragDetected = false})
+	$('#container>canvas').bind('mousemove',function(){dragDetected = true})
+	$('#container>canvas').bind('mouseup',function(event){if(!dragDetected){onWorldClick(event)}})
 
 
 //project latitude longitude into a sphere
@@ -332,54 +343,52 @@ function displayConcertsinDate(date,timeInterval,activegenres,callback){
 
 
 function onDocumentMouseMove( event ) {
-	event.preventDefault();
+	//event.preventDefault();
 	mouse.x =   ( event.clientX / window.innerWidth ) * 2 - 1;
 	mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 }
 
 function onWorldClick( event ) {
 
-	event.preventDefault();
-	raycasterUpdate();
+	event.preventDefault()
+	onDocumentMouseMove(event)
+	raycasterUpdate()
 	lastControlTime = clock.getElapsedTime()
 
-  if(indicator.visible){
+	console.log(event)
 
-		config.autoplay = false
-    var locationId = indicator.userData['locationId'];
+  var locationId = indicator.userData['locationId'];
 
-		//if persistentIndicator was enabled we want to hide
-		//it if the user click again over it
+	//if persistentIndicator was enabled we want to hide
+	//it if the user click again over it
+	//TODO: if we are at moment in time where there isn't events in location is not possible to unselect
+	if(!indicator.visible){
+		persistentIndicator.visible = false
+		$('#addressLocality').fadeOut()
+		$('#addressCountry').fadeOut()
+		$('#artists').fadeOut()
+		return
+	}
 
-		if(persistentIndicator.visible == true &&
-			persistentIndicator.userData['locationId'] ==
-			indicator.userData['locationId']){
-			persistentIndicator.visible = false
-			$('#addressLocality').fadeOut()
-			$('#addressCountry').fadeOut()
-			$('#artists').fadeOut()
-			return
-		}
+	persistentIndicator.position.copy(indicator.position)
+	persistentIndicator.userData['locationId'] = indicator.userData['locationId'];
+	persistentIndicator.visible = true
+  //config.autorotate = false;
+  eventModel.getLocationName(locationId,function(locationInfo){
 
-		persistentIndicator.position.copy(indicator.position)
-		persistentIndicator.userData['locationId'] = indicator.userData['locationId'];
-		persistentIndicator.visible = true
-    //config.autorotate = false;
-    eventModel.getLocationName(locationId,function(locationInfo){
-
-      $('#addressLocality').fadeOut(
-				function(){
-					$(this).text(locationInfo[0]).fadeIn()
-				})
-      $('#addressCountry').fadeOut(
-				function(){
-					$(this).text(locationInfo[1]).fadeIn()
-				})
+    $('#addressLocality').fadeOut(
+			function(){
+				$(this).text(locationInfo[0]).fadeIn()
+			})
+    $('#addressCountry').fadeOut(
+			function(){
+				$(this).text(locationInfo[1]).fadeIn()
+			})
 
     })
 		showArtists(config.date,config.timeInterval,locationId)
 
-  }
+
 }
 
 
@@ -429,10 +438,11 @@ function animate() {
 	render();
 }
 
-function raycasterUpdate(){
+function raycasterUpdate(screenPosition){
 
 	if(layerCloud != undefined){
 
+		raycaster.setFromCamera( mouse, camera );
 		var intersection = raycaster.intersectObject( layerCloud );
 
 		//show indicator over the closest city to the mouse
@@ -466,8 +476,6 @@ function render() {
 
   TWEEN.update();
 
-  raycasterUpdate()
-  controls.update()
 
 	if(config.autorotate){
 		if(angularSpeed < maxAngularSpeed)
@@ -480,6 +488,6 @@ function render() {
 
 
 	camera.updateMatrixWorld();
-	raycaster.setFromCamera( mouse, camera );
+
 	renderer.render( scene, camera );
 }
