@@ -97,16 +97,29 @@ label.genredisabled.radio{
   width:200px;
   height:200px;
 }
-#aboutlink{
+.social{
   position: absolute;
+  text-align: right;
   bottom: 20px;
   right: 20px;
 }
-#aboutlink{
+.social li{
+  list-style: none;
+}
+.social a{
   color:#aaa;
 }
-#aboutlink:hover{
+.social a:hover{
   color:#fff;
+}
+.social a span{
+  visibility: hidden;
+}
+.social a:hover span{
+  visibility: visible;
+}
+.social i{
+  margin-left: 5px;
 }
 
 
@@ -168,7 +181,7 @@ http://tobiasahlin.com/spinkit/
 }
 
 
-@media (max-width:600px){
+@media (max-width:660px){
   /* display better in mobile devices */
   .popup{
     left: 5%;

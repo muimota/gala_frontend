@@ -3,12 +3,21 @@
 	<head>
 		<title>GALA, last 10 years concerts visualized as a galaxy</title>
 		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-		<meta property="og:title" content="GALA, last 10 years concerts visualized as a galaxy" />
+		<meta name="viewport" 					content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<meta property="og:title" 			content="GALA, last 10 years concerts visualized as a galaxy" />
+		<meta property="og:type"        content="website" />
 		<meta property="og:description" content="Considering musical events as a cultural activity indicator,
 				gala is intended to show this activity globally, represented as a galaxy." />
-		<meta property="og:url" content="http://gala.muimota.net" />
-		<meta property="og:image" content="http://gala.muimota.net/img/fb_screenshot.jpg" />
+		<meta property="og:url" 				content="http://gala.muimota.net" />
+		<meta property="og:image" 			content="http://gala.muimota.net/img/fb_screenshot.jpg" />
+
+		<meta name="twitter:card" content="summary_large_image">
+		<meta name="twitter:site" content="@muimota">
+		<meta name="twitter:creator" content="@muimota">
+		<meta name="twitter:title" content="GALA, last 10 years concerts visualized as a galaxy">
+		<meta name="twitter:description" content="Considering musical events as a cultural activity indicator,
+				gala is intended to show this activity globally, represented as a galaxy.">
+		<meta name="twitter:image" content="http://gala.muimota.net/img/fb_screenshot.jpg">
 
 		<link href="libs/flat-ui/dist/css/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 		<link href="libs/flat-ui/dist/css/flat-ui.css" rel="stylesheet">
@@ -130,10 +139,24 @@
 				<p>Gala is an experiment initiated by Martin Nadal</p>
 			</div>
 		</div>
-		<a href="#" id="aboutlink">
-			<small> About <i class="fui-info-circle"></i></small>
-		</a>
+		<ul class='social'>
+			<li>
+				<a href="#" id="aboutlink">
+					<small> <span>About</span> <i class="fui-info-circle"></i></small>
+				</a>
+			</li>
+			<li>
+				<a href="https://twitter.com/home?status=Last%2010%20years%20concerts%20visualized%20as%20a%20galaxy%20%23GALAVIS%20http%3A//gala.muimota.net%20" >
+					<small> <span>twitter</span> <i class="fui-twitter"></i></small>
+				</a>
+			</li>
+			<li>
+				<a href="https://www.facebook.com/sharer/sharer.php?u=http%3A//gala.muimota.net" >
+					<small> <span>facebook</span> <i class="fui-facebook"></i></small>
+				</a>
+			</li>
 
+		</div>
 		<script src="libs/tween.js/src/Tween.js"></script>
 		<script src="libs/three.js/build/three.min.js"></script>
 		<script src="libs/three.js/examples/js/controls/OrbitControls.js"></script>
@@ -267,7 +290,12 @@ $(document).ready(function(){
 			}
 		}
 
-
+		$('.social a'). click(function(){
+			if(this.href[this.href.length-1] != '#'){
+				window.open(this.href,"_blank", "top=500,left=500,width=400,height=400")
+				return false
+			}
+		});
 
 		$('#aboutlink').click(function(event){
 			event.preventDefault()
